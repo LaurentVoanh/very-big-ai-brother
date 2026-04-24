@@ -109,7 +109,7 @@ foreach ($payloads as $name => $config) {
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($postData, JSON_UNESCAPED_UNICODE),
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_TIMEOUT        => 120,
         CURLOPT_FOLLOWLOCATION => true,
     ]);
     
@@ -171,6 +171,10 @@ $ana_a_raw = !empty($results['analysis_a']['choices'][0]['message']['content'])
 $ana_b_raw = !empty($results['analysis_b']['choices'][0]['message']['content'])
     ? $results['analysis_b']['choices'][0]['message']['content']
     : '{}';
+
+// Nettoyage des backticks markdown que Mistral peut ajouter
+$ana_a_raw = preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($ana_a_raw));
+$ana_b_raw = preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($ana_b_raw));
 
 $ana_a = json_decode($ana_a_raw, true) ?? [];
 $ana_b = json_decode($ana_b_raw, true) ?? [];

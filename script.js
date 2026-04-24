@@ -9,6 +9,7 @@ let totalTokens  = 0;
 let totalMsgs    = 0;
 let styleChart   = null;
 let structChart  = null;
+let big5Chart    = null;
 let isProcessing = false;
 
 // ── DOM refs ────────────────────────────────────────────────
@@ -91,6 +92,38 @@ function initCharts() {
       scales: {
         x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#4a5a80', font: { size: 9, family: 'Share Tech Mono' } } },
         y: { grid: { display: false }, ticks: { color: '#4a5a80', font: { size: 9, family: 'Share Tech Mono' } } }
+      }
+    }
+  });
+
+  // BIG FIVE radar chart
+  const ctxBig5 = document.getElementById('big5-chart').getContext('2d');
+  big5Chart = new Chart(ctxBig5, {
+    type: 'radar',
+    data: {
+      labels: ['OUVERTURE', 'CONSCIENC.', 'EXTRAVERSION', 'AGRÉABILITÉ', 'NÉVROSISME'],
+      datasets: [{
+        data: [50, 50, 50, 50, 50],
+        backgroundColor: 'rgba(124,58,237,.08)',
+        borderColor: 'rgba(124,58,237,.7)',
+        pointBackgroundColor: '#7c3aed',
+        pointRadius: 3,
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(255,255,255,.06)' },
+          angleLines: { color: 'rgba(255,255,255,.06)' },
+          ticks: { display: false },
+          pointLabels: {
+            color: '#4a5a80',
+            font: { family: 'Share Tech Mono', size: 8 }
+          }
+        }
       }
     }
   });
@@ -203,6 +236,11 @@ function updateAnalysis(analysis, meta) {
   if (!analysis) return;
   const a = analysis.a || {};
   const b = analysis.b || {};
+  const psycho = a.psychological || {};
+  const marketing = a.marketing || {};
+  const socio = b.sociological || {};
+  const behavioral = b.behavioral || {};
+  const linguistic = b.linguistic_fingerprint || {};
 
   // Sentiment
   const score = parseInt(a.sentiment_score) || 50;
@@ -237,6 +275,8 @@ function updateAnalysis(analysis, meta) {
   setStructVal('st-density',    b.information_density);
   setStructVal('st-cogload',    b.cognitive_load);
   setStructVal('st-certainty',  b.certainty_level);
+  const hedging = linguistic.hedging_frequency ? Math.round(linguistic.hedging_frequency * 100) : '—';
+  document.getElementById('st-hedging').textContent = hedging;
   const avgLen = b.avg_sentence_len || 0;
   document.getElementById('st-avglen').textContent = avgLen ? avgLen.toFixed(1) : '—';
 
@@ -259,6 +299,70 @@ function updateAnalysis(analysis, meta) {
   renderTags('patterns-tags', b.language_patterns   || [], 'tag-pattern');
   renderTags('devices-tags',  b.rhetorical_devices  || [], 'tag-device');
 
+  // BIG FIVE chart (create if not exists)
+  updateBig5Chart(psycho);
+
+  // Psychological profile (❸)
+  document.getElementById('mv-stress').textContent = (psycho.stress_level ?? '—') + (typeof psycho.stress_level === 'number' ? '/100' : '');
+  document.getElementById('m-stress').style.width = (psycho.stress_level ?? 0) + '%';
+  document.getElementById('mv-dissonance').textContent = (psycho.cognitive_dissonance ?? '—') + (typeof psycho.cognitive_dissonance === 'number' ? '/100' : '');
+  document.getElementById('m-dissonance').style.width = (psycho.cognitive_dissonance ?? 0) + '%';
+  document.getElementById('mv-motivation').textContent = psycho.motivation_type || '—';
+  document.getElementById('m-motivation-bar').style.width = '60%';
+  document.getElementById('pg-maslow').textContent = psycho.maslow_level || '—';
+  document.getElementById('pg-attach').textContent = psycho.attachment_style || '—';
+  document.getElementById('pg-locus').textContent = psycho.locus_control || '—';
+  document.getElementById('pg-motiv').textContent = psycho.motivation_type || '—';
+  renderTags('defense-tags', psycho.defense_mechanisms || [], 'tag-defense');
+
+  // Marketing profile (❹)
+  document.getElementById('mkt-persona').textContent = marketing.buyer_persona || '—';
+  document.getElementById('mv-engage').textContent = (marketing.engagement_score ?? '—') + (typeof marketing.engagement_score === 'number' ? '/100' : '');
+  document.getElementById('m-engage').style.width = (marketing.engagement_score ?? 0) + '%';
+  document.getElementById('mv-urgency').textContent = (marketing.urgency_level ?? '—') + (typeof marketing.urgency_level === 'number' ? '/100' : '');
+  document.getElementById('m-urgency').style.width = (marketing.urgency_level ?? 0) + '%';
+  document.getElementById('mv-objection').textContent = (marketing.objection_likelihood ?? '—') + (typeof marketing.objection_likelihood === 'number' ? '/100' : '');
+  document.getElementById('m-objection').style.width = (marketing.objection_likelihood ?? 0) + '%';
+  document.getElementById('mv-persuasion').textContent = (marketing.persuasion_susceptibility ?? '—') + (typeof marketing.persuasion_susceptibility === 'number' ? '/100' : '');
+  document.getElementById('m-persuasion').style.width = (marketing.persuasion_susceptibility ?? 0) + '%';
+  document.getElementById('mkt-decision').textContent = marketing.decision_style || '—';
+  document.getElementById('mkt-price').textContent = marketing.price_sensitivity || '—';
+  renderTags('pain-tags', marketing.pain_points || [], 'tag-pain');
+  renderTags('desire-tags', marketing.desires || [], 'tag-desire');
+
+  // Sociological profile (❻)
+  document.getElementById('sg-edu').textContent = socio.estimated_education || '—';
+  document.getElementById('sg-gen').textContent = socio.generational_marker || '—';
+  document.getElementById('sg-class').textContent = socio.social_class_signals || '—';
+  document.getElementById('sg-polit').textContent = socio.political_signals || '—';
+  document.getElementById('sg-socio').textContent = socio.sociolect || '—';
+  document.getElementById('mv-indiv').textContent = (socio.individualism_score ?? '—') + (typeof socio.individualism_score === 'number' ? '/100' : '');
+  document.getElementById('m-indiv').style.width = (socio.individualism_score ?? 0) + '%';
+  document.getElementById('mv-conform').textContent = (socio.conformity_score ?? '—') + (typeof socio.conformity_score === 'number' ? '/100' : '');
+  document.getElementById('m-conform').style.width = (socio.conformity_score ?? 0) + '%';
+  renderTags('cult-tags', socio.cultural_references || [], 'tag-cult');
+  renderTags('comm-tags', socio.community_signals || [], 'tag-comm');
+
+  // Behavioral signals (❽)
+  document.getElementById('mv-decision').textContent = (behavioral.decision_readiness ?? '—') + (typeof behavioral.decision_readiness === 'number' ? '/100' : '');
+  document.getElementById('m-decision').style.width = (behavioral.decision_readiness ?? 0) + '%';
+  document.getElementById('mv-risk').textContent = (behavioral.risk_tolerance ?? '—') + (typeof behavioral.risk_tolerance === 'number' ? '/100' : '');
+  document.getElementById('m-risk').style.width = (behavioral.risk_tolerance ?? 0) + '%';
+  document.getElementById('mv-info').textContent = (behavioral.information_seeking ?? '—') + (typeof behavioral.information_seeking === 'number' ? '/100' : '');
+  document.getElementById('m-info').style.width = (behavioral.information_seeking ?? 0) + '%';
+  document.getElementById('mv-auth').textContent = (behavioral.authority_deference ?? '—') + (typeof behavioral.authority_deference === 'number' ? '/100' : '');
+  document.getElementById('m-auth').style.width = (behavioral.authority_deference ?? 0) + '%';
+  document.getElementById('mv-consist').textContent = (behavioral.consistency_bias ?? '—') + (typeof behavioral.consistency_bias === 'number' ? '/100' : '');
+  document.getElementById('m-consist').style.width = (behavioral.consistency_bias ?? 0) + '%';
+  renderTags('bias-tags', behavioral.cognitive_biases || [], 'tag-bias');
+  renderTags('commneeds-tags', behavioral.communication_needs || [], 'tag-commneeds');
+
+  // Linguistic fingerprint (❿)
+  document.getElementById('lg-struct').textContent = linguistic.sentence_structure || '—';
+  document.getElementById('lg-voice').textContent = linguistic.voice || '—';
+  document.getElementById('lg-punct').textContent = linguistic.punctuation_style || '—';
+  document.getElementById('lg-lexdiv').textContent = (linguistic.lexical_diversity ?? '—') + (typeof linguistic.lexical_diversity === 'number' ? '/100' : '');
+
   // Meta
   if (meta) {
     document.getElementById('meta-model').textContent   = meta.model   || '—';
@@ -278,6 +382,18 @@ function updateAnalysis(analysis, meta) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+function updateBig5Chart(psycho) {
+  if (!big5Chart) return;
+  big5Chart.data.datasets[0].data = [
+    psycho.big5_openness ?? 50,
+    psycho.big5_conscientiousness ?? 50,
+    psycho.big5_extraversion ?? 50,
+    psycho.big5_agreeableness ?? 50,
+    psycho.big5_neuroticism ?? 50,
+  ];
+  big5Chart.update();
+}
+
 function setBar(fillId, valId, value) {
   const v = parseInt(value) || 0;
   document.getElementById(fillId).style.width = v + '%';
@@ -370,6 +486,91 @@ clearBtn.addEventListener('click', async () => {
   updateSidebar({}, {});
   setAnalysisStatus('idle', '◈ EN ATTENTE D\'UN MESSAGE');
 });
+
+// ── Navigation entre les sections ─────────────────────────────
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const section = item.dataset.section;
+    
+    // Update active nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    
+    // Hide all panels
+    document.querySelectorAll('.chat-panel, .analysis-panel, .history-panel, .system-panel, .cognitive-panel').forEach(p => {
+      p.style.display = 'none';
+    });
+    
+    // Show selected panel
+    if (section === 'chat') {
+      document.querySelector('.chat-panel').style.display = 'block';
+      document.getElementById('analysis-panel').style.display = 'block';
+    } else if (section === 'analysis') {
+      document.querySelector('.cognitive-panel').style.display = 'block';
+    } else if (section === 'history') {
+      loadHistory();
+      document.querySelector('.history-panel').style.display = 'block';
+    } else if (section === 'system') {
+      loadSystemInfo();
+      document.querySelector('.system-panel').style.display = 'block';
+    }
+  });
+});
+
+// ── Load History ──────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const res = await fetch('history.php');
+    const data = await res.json();
+    const container = document.querySelector('.history-panel .panel-content');
+    if (data.messages && data.messages.length > 0) {
+      container.innerHTML = data.messages.map(m => `
+        <div class="history-item">
+          <div class="history-meta">
+            <span class="history-role ${m.role}">${m.role === 'user' ? 'VOUS' : 'AETHER'}</span>
+            <span class="history-time">${m.created_at}</span>
+            <span class="history-tokens">${(m.tokens_in + m.tokens_out) || 0} tokens</span>
+          </div>
+          <div class="history-content">${escapeHtml(m.content)}</div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<div class="empty-state">Aucun message dans l\'historique</div>';
+    }
+  } catch (err) {
+    document.querySelector('.history-panel .panel-content').innerHTML = '<div class="error-state">Erreur de chargement</div>';
+  }
+}
+
+// ── Load System Info ──────────────────────────────────────────
+async function loadSystemInfo() {
+  try {
+    const res = await fetch('system.php');
+    const data = await res.json();
+    const container = document.querySelector('.system-panel .panel-content');
+    container.innerHTML = `
+      <div class="system-grid">
+        <div class="sys-item"><span class="sys-label">VERSION PHP</span><span class="sys-val">${data.php_version || '—'}</span></div>
+        <div class="sys-item"><span class="sys-label">TAILLE DB</span><span class="sys-val">${data.db_size || '—'}</span></div>
+        <div class="sys-item"><span class="sys-label">MESSAGES TOTAL</span><span class="sys-val">${data.total_messages || '—'}</span></div>
+        <div class="sys-item"><span class="sys-label">ANALYSES TOTAL</span><span class="sys-val">${data.total_analyses || '—'}</span></div>
+        <div class="sys-item"><span class="sys-label">CLÉ API 1</span><span class="sys-val status-${data.key1_valid ? 'ok' : 'err'}">${data.key1_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
+        <div class="sys-item"><span class="sys-label">CLÉ API 2</span><span class="sys-val status-${data.key2_valid ? 'ok' : 'err'}">${data.key2_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
+        <div class="sys-item"><span class="sys-label">CLÉ API 3</span><span class="sys-val status-${data.key3_valid ? 'ok' : 'err'}">${data.key3_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
+      </div>
+    `;
+  } catch (err) {
+    document.querySelector('.system-panel .panel-content').innerHTML = '<div class="error-state">Erreur de chargement des infos système</div>';
+  }
+}
+
+// ── Escape HTML ───────────────────────────────────────────────
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 // ── Init ──────────────────────────────────────────────────────
 initCharts();
