@@ -28,90 +28,90 @@ $system_reply = match($mode) {
 };
 
 // NEXUS-A : Analyse psycho-émotionnelle, marketing, Big Five
-$system_analysis_a = 'Tu es NEXUS-A, moteur d\'analyse psycho-émotionnelle et marketing avancée. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
+$system_analysis_a = "Tu es NEXUS-A, moteur d'analyse psycho-émotionnelle et marketing avancée. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
 {
-  "sentiment": "positif|négatif|neutre|ambigu|conflictuel",
-  "sentiment_score": 0,
-  "emotion_primary": "joie|colère|tristesse|peur|surprise|dégoût|anticipation|confiance|curiosité|frustration|enthousiasme|mélancolie|anxiété|nostalgie|admiration",
-  "emotion_secondary": "string ou null",
-  "emotion_tertiary": "string ou null",
-  "tone": "formel|informel|académique|familier|ironique|sarcastique|empathique|autoritaire|interrogatif|assertif|contemplatif|urgent|ludique",
-  "style_formal": 0,
-  "style_assertive": 0,
-  "style_creative": 0,
-  "psychological": {
-    "big5_openness": 0,
-    "big5_conscientiousness": 0,
-    "big5_extraversion": 0,
-    "big5_agreeableness": 0,
-    "big5_neuroticism": 0,
-    "stress_level": 0,
-    "cognitive_dissonance": 0,
-    "motivation_type": "intrinsèque|extrinsèque|sociale|existentielle|pragmatique",
-    "maslow_level": "physiologique|sécurité|appartenance|estime|accomplissement",
-    "attachment_style": "sécure|anxieux|évitant|désorganisé|indéterminé",
-    "locus_control": "interne|externe|mixte",
-    "defense_mechanisms": ["string"]
+  \"sentiment\": \"positif|négatif|neutre|ambigu|conflictuel\",
+  \"sentiment_score\": 0,
+  \"emotion_primary\": \"joie|colère|tristesse|peur|surprise|dégoût|anticipation|confiance|curiosité|frustration|enthousiasme|mélancolie|anxiété|nostalgie|admiration\",
+  \"emotion_secondary\": \"string ou null\",
+  \"emotion_tertiary\": \"string ou null\",
+  \"tone\": \"formel|informel|académique|familier|ironique|sarcastique|empathique|autoritaire|interrogatif|assertif|contemplatif|urgent|ludique\",
+  \"style_formal\": 0,
+  \"style_assertive\": 0,
+  \"style_creative\": 0,
+  \"psychological\": {
+    \"big5_openness\": 0,
+    \"big5_conscientiousness\": 0,
+    \"big5_extraversion\": 0,
+    \"big5_agreeableness\": 0,
+    \"big5_neuroticism\": 0,
+    \"stress_level\": 0,
+    \"cognitive_dissonance\": 0,
+    \"motivation_type\": \"intrinsèque|extrinsèque|sociale|existentielle|pragmatique\",
+    \"maslow_level\": \"physiologique|sécurité|appartenance|estime|accomplissement\",
+    \"attachment_style\": \"sécure|anxieux|évitant|désorganisé|indéterminé\",
+    \"locus_control\": \"interne|externe|mixte\",
+    \"defense_mechanisms\": [\"string\"]
   },
-  "marketing": {
-    "buyer_persona": "string",
-    "decision_style": "analytique|intuitif|émotionnel|social|directif",
-    "pain_points": ["string"],
-    "desires": ["string"],
-    "objection_likelihood": 0,
-    "engagement_score": 0,
-    "brand_affinity_signals": ["string"],
-    "price_sensitivity": "faible|moyenne|élevée|indéterminée",
-    "urgency_level": 0,
-    "trust_signals": ["string"],
-    "persuasion_susceptibility": 0
+  \"marketing\": {
+    \"buyer_persona\": \"string\",
+    \"decision_style\": \"analytique|intuitif|émotionnel|social|directif\",
+    \"pain_points\": [\"string\"],
+    \"desires\": [\"string\"],
+    \"objection_likelihood\": 0,
+    \"engagement_score\": 0,
+    \"brand_affinity_signals\": [\"string\"],
+    \"price_sensitivity\": \"faible|moyenne|élevée|indéterminée\",
+    \"urgency_level\": 0,
+    \"trust_signals\": [\"string\"],
+    \"persuasion_susceptibility\": 0
   },
-  "source_text": "copie courte du texte"
-}';
+  \"source_text\": \"copie courte du texte\"
+}";
 
 // NEXUS-B : Analyse sociolinguistique, comportementale, patterns, surnaturel
-$system_analysis_b = 'Tu es NEXUS-B, moteur d\'analyse sociolinguistique, comportementale et pattern-matching. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
+$system_analysis_b = "Tu es NEXUS-B, moteur d'analyse sociolinguistique, comportementale et pattern-matching. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
 {
-  "complexity": 0,
-  "vocabulary_richness": 0,
-  "intent": "question|affirmation|demande|narration|argumentation|exploration|critique|brainstorming|création|confession|recherche|négociation",
-  "themes": ["string"],
-  "keywords": ["string"],
-  "language_patterns": ["string"],
-  "rhetorical_devices": ["string"],
-  "cognitive_load": 0,
-  "information_density": 0,
-  "certainty_level": 0,
-  "sociological": {
-    "estimated_education": "primaire|secondaire|bac|licence|master|doctorat|autodidacte",
-    "sociolect": "string",
-    "cultural_references": ["string"],
-    "generational_marker": "boomers|gen-x|millennial|gen-z|alpha|indéterminé",
-    "social_class_signals": "populaire|classe-moyenne|bourgeois|élite|indéterminé",
-    "political_signals": "progressiste|conservateur|libertaire|apolitique|indéterminé",
-    "individualism_score": 0,
-    "conformity_score": 0,
-    "community_signals": ["string"]
+  \"complexity\": 0,
+  \"vocabulary_richness\": 0,
+  \"intent\": \"question|affirmation|demande|narration|argumentation|exploration|critique|brainstorming|création|confession|recherche|négociation\",
+  \"themes\": [\"string\"],
+  \"keywords\": [\"string\"],
+  \"language_patterns\": [\"string\"],
+  \"rhetorical_devices\": [\"string\"],
+  \"cognitive_load\": 0,
+  \"information_density\": 0,
+  \"certainty_level\": 0,
+  \"sociological\": {
+    \"estimated_education\": \"primaire|secondaire|bac|licence|master|doctorat|autodidacte\",
+    \"sociolect\": \"string\",
+    \"cultural_references\": [\"string\"],
+    \"generational_marker\": \"boomers|gen-x|millennial|gen-z|alpha|indéterminé\",
+    \"social_class_signals\": \"populaire|classe-moyenne|bourgeois|élite|indéterminé\",
+    \"political_signals\": \"progressiste|conservateur|libertaire|apolitique|indéterminé\",
+    \"individualism_score\": 0,
+    \"conformity_score\": 0,
+    \"community_signals\": [\"string\"]
   },
-  "behavioral": {
-    "decision_readiness": 0,
-    "risk_tolerance": 0,
-    "information_seeking": 0,
-    "authority_deference": 0,
-    "novelty_seeking": 0,
-    "cognitive_biases": ["string"],
-    "communication_needs": ["string"],
-    "consistency_bias": 0
+  \"behavioral\": {
+    \"decision_readiness\": 0,
+    \"risk_tolerance\": 0,
+    \"information_seeking\": 0,
+    \"authority_deference\": 0,
+    \"novelty_seeking\": 0,
+    \"cognitive_biases\": [\"string\"],
+    \"communication_needs\": [\"string\"],
+    \"consistency_bias\": 0
   },
-  "linguistic_fingerprint": {
-    "lexical_diversity": 0,
-    "hedging_frequency": 0,
-    "sentence_structure": "simple|composée|complexe|mixte",
-    "voice": "active|passive|mixte",
-    "punctuation_style": "string"
+  \"linguistic_fingerprint\": {
+    \"lexical_diversity\": 0,
+    \"hedging_frequency\": 0,
+    \"sentence_structure\": \"simple|composée|complexe|mixte\",
+    \"voice\": \"active|passive|mixte\",
+    \"punctuation_style\": \"string\"
   },
-  "anomaly_signals": ["string"]
-}';
+  \"anomaly_signals\": [\"string\"]
+}";
 
 // ── cURL multi ──────────────────────────────────────────────
 $key_r  = get_key('responder');
