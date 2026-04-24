@@ -145,10 +145,10 @@ $payloads = [
 ];
 
 $keys_map = ['reply'=>$key_r,'analysis_a'=>$key_a1,'analysis_b'=>$key_a2];
-$mh = curl_multi_init();
-$handles = [];
+$results = [];
 $t_start = microtime(true);
 
+// Requêtes séquentielles pour respecter la limite de 1 req/s de Mistral
 foreach ($payloads as $name => $payload) {
     $ch = curl_init(MISTRAL_API);
     curl_setopt_array($ch, [
@@ -158,22 +158,17 @@ foreach ($payloads as $name => $payload) {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 35,
     ]);
-    curl_multi_add_handle($mh, $ch);
-    $handles[$name] = $ch;
-}
-
-do {
-    $status = curl_multi_exec($mh, $active);
-    if ($active) curl_multi_select($mh);
-} while ($active && $status == CURLM_OK);
-
-$results = [];
-foreach ($handles as $name => $ch) {
-    $results[$name] = json_decode(curl_multi_getcontent($ch), true);
-    curl_multi_remove_handle($mh, $ch);
+    
+    $response = curl_exec($ch);
+    $results[$name] = json_decode($response, true);
+    
     curl_close($ch);
+    
+    // Petit délai entre les requêtes pour éviter le rate limiting
+    if (next($payloads)) {
+        usleep(1100000); // 1.1 seconde de pause
+    }
 }
-curl_multi_close($mh);
 
 $total_latency = (int)((microtime(true) - $t_start) * 1000);
 
