@@ -1,9 +1,52 @@
 <?php
+// ============================================================
+// AETHER v4.0 — API ENDPOINT
+// ============================================================
+
+// Activer les logs d'erreur pour le débogage sur serveur
+error_reporting(E_ALL);
+ini_set('display_errors', '0'); // Ne pas afficher les erreurs au client
+ini_set('log_errors', '1');
+
+// Chemin absolu pour les logs
+$logFile = __DIR__ . '/logs/error.log';
+if (!is_dir(dirname($logFile))) {
+    mkdir(dirname($logFile), 0755, true);
+}
+ini_set('error_log', $logFile);
+
+// Démarrer la session IMMÉDIATEMENT avant tout autre traitement
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'database.php';
+
+// Logger une fonction utilitaire
+function api_log($message, $level = 'INFO') {
+    global $logFile;
+    $timestamp = date('Y-m-d H:i:s');
+    $sessionId = $_SESSION['sid'] ?? 'NO_SESSION';
+    $logEntry = "[$timestamp] [$level] [SID:$sessionId] $message" . PHP_EOL;
+    error_log($logEntry);
+}
+
+api_log('=== Nouvelle requête API ===');
+
 header('Content-Type: application/json; charset=utf-8');
 
-$session = $_SESSION['sid'] ?? ($_SESSION['sid'] = bin2hex(random_bytes(10)));
+// Vérifier et initialiser la session
+$session = $_SESSION['sid'] ?? null;
+api_log('Session ID avant init: ' . ($session ?? 'NULL'));
+
+if (!$session) {
+    $session = bin2hex(random_bytes(10));
+    $_SESSION['sid'] = $session;
+    api_log('Nouvelle session créée: ' . $session, 'WARN');
+}
+
 ensure_session($session);
+api_log('Session assurée en DB: ' . substr($session, 0, 8));
 
 $input      = json_decode(file_get_contents('php://input'), true);
 $message    = trim($input['message'] ?? '');
@@ -47,16 +90,20 @@ $test_keys = ['responder'=>$key_r, 'analyzer1'=>$key_a1, 'analyzer2'=>$key_a2];
 foreach ($test_keys as $role => $key) {
     if (empty($key) || strpos($key, 'VOTRE_CLE') !== false || strlen($key) < 10) {
         $invalid_keys[] = $role;
+        api_log("Clé API invalide pour le rôle: $role", 'ERROR');
     }
 }
 
 if (!empty($invalid_keys)) {
+    api_log('Erreur: Clés API invalides - ' . implode(', ', $invalid_keys), 'ERROR');
     echo json_encode([
         'error' => 'Cles API invalides. Configurez vos cles Mistral dans config.php. Roles: ' . implode(', ', $invalid_keys),
         'timestamp' => date('H:i:s'),
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+api_log('Clés API validées. Modèles: reply=' . $model_reply . ', analysis=' . $model_analyze);
 
 $payloads = [
     'reply' => [
@@ -124,7 +171,7 @@ do {
     curl_multi_select($multi_handle, 0.1);
 } while ($running > 0);
 
-// Recuperation des resultats
+// Recuperation des resultats avec logging detaille
 foreach ($curl_handles as $name => $ch) {
     $response = curl_multi_getcontent($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -132,10 +179,18 @@ foreach ($curl_handles as $name => $ch) {
     
     if ($response && $http_code === 200) {
         $results[$name] = json_decode($response, true);
+        api_log("Succès [$name]: HTTP $http_code");
     } else {
         $errors[$name] = $curl_error ?: "HTTP $http_code";
         $results[$name] = null;
-        error_log("AETHER API Error [$name]: HTTP $http_code - " . ($curl_error ?: 'Unknown error'));
+        $errorMsg = "AETHER API Error [$name]: HTTP $http_code - " . ($curl_error ?: 'Unknown error');
+        api_log($errorMsg, 'ERROR');
+        error_log($errorMsg);
+        
+        // Log plus de détails pour le débogage
+        if ($http_code >= 400) {
+            api_log("Réponse brute: " . substr($response ?? 'NO_RESPONSE', 0, 500), 'DEBUG');
+        }
     }
     
     curl_multi_remove_handle($multi_handle, $ch);
@@ -143,6 +198,7 @@ foreach ($curl_handles as $name => $ch) {
 }
 
 curl_multi_close($multi_handle);
+api_log('Toutes les requêtes cURL terminées. Latence totale: ' . ((int)((microtime(true) - $t_start) * 1000)) . 'ms');
 
 $total_latency = (int)((microtime(true) - $t_start) * 1000);
 
@@ -176,8 +232,21 @@ $ana_b_raw = !empty($results['analysis_b']['choices'][0]['message']['content'])
 $ana_a_raw = preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($ana_a_raw));
 $ana_b_raw = preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($ana_b_raw));
 
-$ana_a = json_decode($ana_a_raw, true) ?? [];
-$ana_b = json_decode($ana_b_raw, true) ?? [];
+api_log("Analyse A après nettoyage: " . strlen($ana_a_raw) . " chars");
+api_log("Analyse B après nettoyage: " . strlen($ana_b_raw) . " chars");
+
+$ana_a = json_decode($ana_a_raw, true);
+$ana_b = json_decode($ana_b_raw, true);
+
+// Logging des erreurs JSON
+if ($ana_a === null) {
+    api_log("Échec parsing JSON analyse A: " . json_last_error_msg() . " - raw: " . substr($ana_a_raw, 0, 200), 'ERROR');
+    $ana_a = [];
+}
+if ($ana_b === null) {
+    api_log("Échec parsing JSON analyse B: " . json_last_error_msg() . " - raw: " . substr($ana_b_raw, 0, 200), 'ERROR');
+    $ana_b = [];
+}
 
 // Valeurs par defaut pour analyse A
 if (empty($ana_a)) {
@@ -269,11 +338,21 @@ if (empty($ana_b)) {
 
 $ana_a['source_text'] = $message;
 
-$msg_id = save_message($session, 'user', $message, $tokens_in, 0, $model_reply, $total_latency);
-save_message($session, 'assistant', $reply_raw, 0, $tokens_out, $model_reply, $total_latency);
-save_analysis($session, $msg_id, $ana_a, $ana_b);
+api_log("Sauvegarde en base de données - session: " . substr($session, 0, 8));
+
+try {
+    $msg_id = save_message($session, 'user', $message, $tokens_in, 0, $model_reply, $total_latency);
+    save_message($session, 'assistant', $reply_raw, 0, $tokens_out, $model_reply, $total_latency);
+    save_analysis($session, $msg_id, $ana_a, $ana_b);
+    api_log("Messages et analyse sauvegardés avec succès. Message ID: $msg_id");
+} catch (Exception $e) {
+    api_log("Erreur lors de la sauvegarde en DB: " . $e->getMessage(), 'ERROR');
+    // Continuer même si la sauvegarde échoue
+}
 
 $stats = get_session_stats($session);
+
+api_log("Réponse envoyée au client avec succès");
 
 echo json_encode([
     'reply'     => $reply_raw,
@@ -287,3 +366,5 @@ echo json_encode([
     'stats'     => $stats,
     'timestamp' => date('H:i:s'),
 ], JSON_UNESCAPED_UNICODE);
+
+api_log('=== Requête API terminée ===');
