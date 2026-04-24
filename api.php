@@ -20,100 +20,20 @@ $temp_map   = ['normal' => 0.5, 'profond' => 0.3, 'creatif' => 0.9, 'technique' 
 $temperature = $temp_map[$mode] ?? 0.5;
 
 $system_reply = match($mode) {
-    'profond'   => "Tu es AETHER v4.0, IA d'analyse profonde. Réponds avec profondeur, nuance et implications cachées.",
-    'creatif'   => "Tu es AETHER v4.0, mode créatif. Réponds avec imagination, métaphores et originalité.",
-    'technique' => "Tu es AETHER v4.0, mode technique. Sois précis, structuré, cite des données concrètes.",
-    'poetique'  => "Tu es AETHER v4.0, mode poétique. Exprime-toi avec lyrisme, rythme et images sensorielles.",
-    default     => "Tu es AETHER v4.0, assistant IA avancé. Réponds en français de manière claire et utile.",
+    'profond'   => "Tu es AETHER v4.0, IA d'analyse profonde. Reponds avec profondeur, nuance et implications cachees.",
+    'creatif'   => "Tu es AETHER v4.0, mode creatif. Reponds avec imagination, metaphores et originalite.",
+    'technique' => "Tu es AETHER v4.0, mode technique. Sois precis, structure, cite des donnees concretes.",
+    'poetique'  => "Tu es AETHER v4.0, mode poetique. Exprime-toi avec lyrisme, rythme et images sensorielles.",
+    default     => "Tu es AETHER v4.0, assistant IA avance. Reponds en francais de maniere claire et utile.",
 };
 
-// NEXUS-A : Analyse psycho-émotionnelle, marketing, Big Five
-$system_analysis_a = "Tu es NEXUS-A, moteur d'analyse psycho-émotionnelle et marketing avancée. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
-{
-  \"sentiment\": \"positif|négatif|neutre|ambigu|conflictuel\",
-  \"sentiment_score\": 0,
-  \"emotion_primary\": \"joie|colère|tristesse|peur|surprise|dégoût|anticipation|confiance|curiosité|frustration|enthousiasme|mélancolie|anxiété|nostalgie|admiration\",
-  \"emotion_secondary\": \"string ou null\",
-  \"emotion_tertiary\": \"string ou null\",
-  \"tone\": \"formel|informel|académique|familier|ironique|sarcastique|empathique|autoritaire|interrogatif|assertif|contemplatif|urgent|ludique\",
-  \"style_formal\": 0,
-  \"style_assertive\": 0,
-  \"style_creative\": 0,
-  \"psychological\": {
-    \"big5_openness\": 0,
-    \"big5_conscientiousness\": 0,
-    \"big5_extraversion\": 0,
-    \"big5_agreeableness\": 0,
-    \"big5_neuroticism\": 0,
-    \"stress_level\": 0,
-    \"cognitive_dissonance\": 0,
-    \"motivation_type\": \"intrinsèque|extrinsèque|sociale|existentielle|pragmatique\",
-    \"maslow_level\": \"physiologique|sécurité|appartenance|estime|accomplissement\",
-    \"attachment_style\": \"sécure|anxieux|évitant|désorganisé|indéterminé\",
-    \"locus_control\": \"interne|externe|mixte\",
-    \"defense_mechanisms\": [\"string\"]
-  },
-  \"marketing\": {
-    \"buyer_persona\": \"string\",
-    \"decision_style\": \"analytique|intuitif|émotionnel|social|directif\",
-    \"pain_points\": [\"string\"],
-    \"desires\": [\"string\"],
-    \"objection_likelihood\": 0,
-    \"engagement_score\": 0,
-    \"brand_affinity_signals\": [\"string\"],
-    \"price_sensitivity\": \"faible|moyenne|élevée|indéterminée\",
-    \"urgency_level\": 0,
-    \"trust_signals\": [\"string\"],
-    \"persuasion_susceptibility\": 0
-  },
-  \"source_text\": \"copie courte du texte\"
-}";
+// NEXUS-A : Analyse psycho-emotionnelle, marketing, Big Five
+$system_analysis_a = "Tu es NEXUS-A, moteur d'analyse psycho-emotionnelle et marketing avancee. Reponds UNIQUEMENT en JSON valide, sans markdown ni backticks:\n{\n  \"sentiment\": \"positif|negatif|neutre|ambigu|conflictuel\",\n  \"sentiment_score\": 0,\n  \"emotion_primary\": \"joie|colere|tristesse|peur|surprise|degout|anticipation|confiance|curiosite|frustration|enthousiasme|melancolie|anxiete|nostalgie|admiration\",\n  \"emotion_secondary\": \"string ou null\",\n  \"emotion_tertiary\": \"string ou null\",\n  \"tone\": \"formel|informel|academique|familier|ironique|sarcastique|empathique|autoritaire|interrogatif|assertif|contemplatif|urgent|ludique\",\n  \"style_formal\": 0,\n  \"style_assertive\": 0,\n  \"style_creative\": 0,\n  \"psychological\": {\n    \"big5_openness\": 0,\n    \"big5_conscientiousness\": 0,\n    \"big5_extraversion\": 0,\n    \"big5_agreeableness\": 0,\n    \"big5_neuroticism\": 0,\n    \"stress_level\": 0,\n    \"cognitive_dissonance\": 0,\n    \"motivation_type\": \"intrinseque|extrinseque|sociale|existentielle|pragmatique\",\n    \"maslow_level\": \"physiologique|securite|appartenance|estime|accomplissement\",\n    \"attachment_style\": \"secure|anxieux|evitant|desorganise|indetermine\",\n    \"locus_control\": \"interne|externe|mixte\",\n    \"defense_mechanisms\": [\"string\"]\n  },\n  \"marketing\": {\n    \"buyer_persona\": \"string\",\n    \"decision_style\": \"analytique|intuitif|emotionnel|social|directif\",\n    \"pain_points\": [\"string\"],\n    \"desires\": [\"string\"],\n    \"objection_likelihood\": 0,\n    \"engagement_score\": 0,\n    \"brand_affinity_signals\": [\"string\"],\n    \"price_sensitivity\": \"faible|moyenne|elevee|indeterminee\",\n    \"urgency_level\": 0,\n    \"trust_signals\": [\"string\"],\n    \"persuasion_susceptibility\": 0\n  },\n  \"source_text\": \"copie courte du texte\"\n}";
 
-// NEXUS-B : Analyse sociolinguistique, comportementale, patterns, surnaturel
-$system_analysis_b = "Tu es NEXUS-B, moteur d'analyse sociolinguistique, comportementale et pattern-matching. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
-{
-  \"complexity\": 0,
-  \"vocabulary_richness\": 0,
-  \"intent\": \"question|affirmation|demande|narration|argumentation|exploration|critique|brainstorming|création|confession|recherche|négociation\",
-  \"themes\": [\"string\"],
-  \"keywords\": [\"string\"],
-  \"language_patterns\": [\"string\"],
-  \"rhetorical_devices\": [\"string\"],
-  \"cognitive_load\": 0,
-  \"information_density\": 0,
-  \"certainty_level\": 0,
-  \"sociological\": {
-    \"estimated_education\": \"primaire|secondaire|bac|licence|master|doctorat|autodidacte\",
-    \"sociolect\": \"string\",
-    \"cultural_references\": [\"string\"],
-    \"generational_marker\": \"boomers|gen-x|millennial|gen-z|alpha|indéterminé\",
-    \"social_class_signals\": \"populaire|classe-moyenne|bourgeois|élite|indéterminé\",
-    \"political_signals\": \"progressiste|conservateur|libertaire|apolitique|indéterminé\",
-    \"individualism_score\": 0,
-    \"conformity_score\": 0,
-    \"community_signals\": [\"string\"]
-  },
-  \"behavioral\": {
-    \"decision_readiness\": 0,
-    \"risk_tolerance\": 0,
-    \"information_seeking\": 0,
-    \"authority_deference\": 0,
-    \"novelty_seeking\": 0,
-    \"cognitive_biases\": [\"string\"],
-    \"communication_needs\": [\"string\"],
-    \"consistency_bias\": 0
-  },
-  \"linguistic_fingerprint\": {
-    \"lexical_diversity\": 0,
-    \"hedging_frequency\": 0,
-    \"sentence_structure\": \"simple|composée|complexe|mixte\",
-    \"voice\": \"active|passive|mixte\",
-    \"punctuation_style\": \"string\"
-  },
-  \"anomaly_signals\": [\"string\"]
-}";
+// NEXUS-B : Analyse sociolinguistique, comportementale, patterns
+$system_analysis_b = "Tu es NEXUS-B, moteur d'analyse sociolinguistique, comportementale et pattern-matching. Reponds UNIQUEMENT en JSON valide, sans markdown ni backticks:\n{\n  \"complexity\": 0,\n  \"vocabulary_richness\": 0,\n  \"intent\": \"question|affirmation|demande|narration|argumentation|exploration|critique|brainstorming|creation|confession|recherche|negociation\",\n  \"themes\": [\"string\"],\n  \"keywords\": [\"string\"],\n  \"language_patterns\": [\"string\"],\n  \"rhetorical_devices\": [\"string\"],\n  \"cognitive_load\": 0,\n  \"information_density\": 0,\n  \"certainty_level\": 0,\n  \"sociological\": {\n    \"estimated_education\": \"primaire|secondaire|bac|licence|master|doctorat|autodidacte\",\n    \"sociolect\": \"string\",\n    \"cultural_references\": [\"string\"],\n    \"generational_marker\": \"boomers|gen-x|millennial|gen-z|alpha|indetermine\",\n    \"social_class_signals\": \"populaire|classe-moyenne|bourgeois|elite|indetermine\",\n    \"political_signals\": \"progressiste|conservateur|libertaire|apolitique|indetermine\",\n    \"individualism_score\": 0,\n    \"conformity_score\": 0,\n    \"community_signals\": [\"string\"]\n  },\n  \"behavioral\": {\n    \"decision_readiness\": 0,\n    \"risk_tolerance\": 0,\n    \"information_seeking\": 0,\n    \"authority_deference\": 0,\n    \"novelty_seeking\": 0,\n    \"cognitive_biases\": [\"string\"],\n    \"communication_needs\": [\"string\"],\n    \"consistency_bias\": 0\n  },\n  \"linguistic_fingerprint\": {\n    \"lexical_diversity\": 0,\n    \"hedging_frequency\": 0,\n    \"sentence_structure\": \"simple|composee|complexe|mixte\",\n    \"voice\": \"active|passive|mixte\",\n    \"punctuation_style\": \"string\"\n  },\n  \"anomaly_signals\": [\"string\"]\n}";
 
-// ── cURL multi avec rotation des clés et délais ──────────────────────────────────────────────
+// cURL MULTI : 3 requetes PARALLELES pour performance maximale
 $key_r  = get_key('responder');
 $key_a1 = get_key('analyzer1');
 $key_a2 = get_key('analyzer2');
@@ -121,14 +41,33 @@ $key_a2 = get_key('analyzer2');
 $model_reply   = select_model($model_task);
 $model_analyze = select_model('analysis');
 
+// Verification des cles API avant de commencer
+$invalid_keys = [];
+$test_keys = ['responder'=>$key_r, 'analyzer1'=>$key_a1, 'analyzer2'=>$key_a2];
+foreach ($test_keys as $role => $key) {
+    if (empty($key) || strpos($key, 'VOTRE_CLE') !== false || strlen($key) < 10) {
+        $invalid_keys[] = $role;
+    }
+}
+
+if (!empty($invalid_keys)) {
+    echo json_encode([
+        'error' => 'Cles API invalides. Configurez vos cles Mistral dans config.php. Roles: ' . implode(', ', $invalid_keys),
+        'timestamp' => date('H:i:s'),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $payloads = [
     'reply' => [
+        'key'         => $key_r,
         'model'       => $model_reply,
         'messages'    => array_merge([['role'=>'system','content'=>$system_reply]], $messages_ctx),
         'temperature' => $temperature,
         'max_tokens'  => 1500,
     ],
     'analysis_a' => [
+        'key'             => $key_a1,
         'model'           => $model_analyze,
         'messages'        => [['role'=>'system','content'=>$system_analysis_a],['role'=>'user','content'=>$message]],
         'temperature'     => 0.1,
@@ -136,6 +75,7 @@ $payloads = [
         'response_format' => ['type'=>'json_object'],
     ],
     'analysis_b' => [
+        'key'             => $key_a2,
         'model'           => $model_analyze,
         'messages'        => [['role'=>'system','content'=>$system_analysis_b],['role'=>'user','content'=>$message]],
         'temperature'     => 0.1,
@@ -144,43 +84,49 @@ $payloads = [
     ],
 ];
 
-$keys_map = ['reply'=>$key_r,'analysis_a'=>$key_a1,'analysis_b'=>$key_a2];
 $results = [];
 $errors = [];
 $t_start = microtime(true);
 
+// Creation des handles cURL pour execution PARALLELE
+$multi_handle = curl_multi_init();
+$curl_handles = [];
 
-// Vérification des clés API avant de commencer
-$invalid_keys = [];
-foreach ($keys_map as $role => $key) {
-    if (empty($key) || strpos($key, 'VOTRE_CLE') !== false || strlen($key) < 10) {
-        $invalid_keys[] = $role;
-    }
-}
-
-if (!empty($invalid_keys)) {
-    echo json_encode([
-        'error' => 'Clés API manquantes ou invalides. Veuillez configurer vos clés Mistral dans config.php. Rôles invalides: ' . implode(', ',$invalid_keys),
-        'timestamp' => date('H:i:s'),
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-// Rotation circulaire des clés avec délais pour éviter le rate limiting (1 req/s Mistral)
-$payload_keys = array_keys($payloads);
-$total_payloads = count($payload_keys);
-
-foreach ($payload_keys as $index => $name) {
-    $payload = $payloads[$name];
+foreach ($payloads as $name => $config) {
     $ch = curl_init(MISTRAL_API);
+    $postData = [
+        'model'       => $config['model'],
+        'messages'    => $config['messages'],
+        'temperature' => $config['temperature'],
+        'max_tokens'  => $config['max_tokens'],
+    ];
+    if (isset($config['response_format'])) {
+        $postData['response_format'] = $config['response_format'];
+    }
+    
     curl_setopt_array($ch, [
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer '.$keys_map[$name],'Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $config['key'], 'Content-Type: application/json'],
         CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_POSTFIELDS     => json_encode($postData, JSON_UNESCAPED_UNICODE),
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 35,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_FOLLOWLOCATION => true,
     ]);
     
-    $response = curl_exec($ch);
+    curl_multi_add_handle($multi_handle, $ch);
+    $curl_handles[$name] = $ch;
+}
+
+// Execution PARALLELE - toutes les requetes partent en meme temps
+$running = null;
+do {
+    curl_multi_exec($multi_handle, $running);
+    curl_multi_select($multi_handle, 0.1);
+} while ($running > 0);
+
+// Recuperation des resultats
+foreach ($curl_handles as $name => $ch) {
+    $response = curl_multi_getcontent($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curl_error = curl_error($ch);
     
@@ -192,18 +138,15 @@ foreach ($payload_keys as $index => $name) {
         error_log("AETHER API Error [$name]: HTTP $http_code - " . ($curl_error ?: 'Unknown error'));
     }
     
+    curl_multi_remove_handle($multi_handle, $ch);
     curl_close($ch);
-    
-    // Délai entre les requêtes pour respecter la limite de 1 req/s de Mistral
-    // On attend seulement s'il reste des requêtes à faire
-    if ($index < $total_payloads - 1) {
-        usleep(1200000); // 1.2 secondes de pause pour être sûr
-    }
 }
+
+curl_multi_close($multi_handle);
 
 $total_latency = (int)((microtime(true) - $t_start) * 1000);
 
-// R�cup�ration de la r�ponse principale (reply) - critique pour le chat
+// Recuperation de la reponse principale (reply) - critique pour le chat
 $reply_raw = 'Erreur de connexion.';
 $tokens_in = 0;
 $tokens_out = 0;
@@ -213,8 +156,7 @@ if (!empty($results['reply']) && isset($results['reply']['choices'][0]['message'
     $tokens_in = $results['reply']['usage']['prompt_tokens'] ?? 0;
     $tokens_out = $results['reply']['usage']['completion_tokens'] ?? 0;
 } else {
-    // Si la r�ponse principale a �chou�, on retourne une erreur claire
-    $error_msg = !empty($errors['reply']) ? $errors['reply'] : 'R�ponse IA indisponible';
+    $error_msg = !empty($errors['reply']) ? $errors['reply'] : 'Reponse IA indisponible';
     echo json_encode([
         'error' => $error_msg,
         'timestamp' => date('H:i:s'),
@@ -222,23 +164,23 @@ if (!empty($results['reply']) && isset($results['reply']['choices'][0]['message'
     exit;
 }
 
-// Analyses secondaires - on fournit des valeurs par d�faut si elles �chouent
-$ana_a_raw = !empty($results['analysis_a']['choices'][0]['message']['content']) 
-    ? $results['analysis_a']['choices'][0]['message']['content'] 
+// Analyses secondaires - valeurs par defaut si echec
+$ana_a_raw = !empty($results['analysis_a']['choices'][0]['message']['content'])
+    ? $results['analysis_a']['choices'][0]['message']['content']
     : '{}';
-$ana_b_raw = !empty($results['analysis_b']['choices'][0]['message']['content']) 
-    ? $results['analysis_b']['choices'][0]['message']['content'] 
+$ana_b_raw = !empty($results['analysis_b']['choices'][0]['message']['content'])
+    ? $results['analysis_b']['choices'][0]['message']['content']
     : '{}';
 
 $ana_a = json_decode($ana_a_raw, true) ?? [];
 $ana_b = json_decode($ana_b_raw, true) ?? [];
 
-// Valeurs par d�faut pour l'analyse A si elle a �chou�
+// Valeurs par defaut pour analyse A
 if (empty($ana_a)) {
     $ana_a = [
         'sentiment' => 'neutre',
         'sentiment_score' => 50,
-        'emotion_primary' => 'ind�termin�',
+        'emotion_primary' => 'indetermine',
         'emotion_secondary' => null,
         'emotion_tertiary' => null,
         'tone' => 'neutre',
@@ -253,21 +195,21 @@ if (empty($ana_a)) {
             'big5_neuroticism' => 50,
             'stress_level' => 30,
             'cognitive_dissonance' => 20,
-            'motivation_type' => 'ind�termin�e',
-            'maslow_level' => 'ind�termin�',
-            'attachment_style' => 'ind�termin�',
+            'motivation_type' => 'indeterminee',
+            'maslow_level' => 'indetermine',
+            'attachment_style' => 'indetermine',
             'locus_control' => 'mixte',
             'defense_mechanisms' => []
         ],
         'marketing' => [
-            'buyer_persona' => 'ind�termin�',
-            'decision_style' => 'ind�termin�',
+            'buyer_persona' => 'indetermine',
+            'decision_style' => 'indetermine',
             'pain_points' => [],
             'desires' => [],
             'objection_likelihood' => 50,
             'engagement_score' => 50,
             'brand_affinity_signals' => [],
-            'price_sensitivity' => 'ind�termin�e',
+            'price_sensitivity' => 'indeterminee',
             'urgency_level' => 50,
             'trust_signals' => [],
             'persuasion_susceptibility' => 50
@@ -276,12 +218,12 @@ if (empty($ana_a)) {
     ];
 }
 
-// Valeurs par d�faut pour l'analyse B si elle a �chou�
+// Valeurs par defaut pour analyse B
 if (empty($ana_b)) {
     $ana_b = [
         'complexity' => 50,
         'vocabulary_richness' => 50,
-        'intent' => 'ind�termin�',
+        'intent' => 'indetermine',
         'themes' => [],
         'keywords' => [],
         'language_patterns' => [],
@@ -290,12 +232,12 @@ if (empty($ana_b)) {
         'information_density' => 50,
         'certainty_level' => 50,
         'sociological' => [
-            'estimated_education' => 'ind�termin�',
+            'estimated_education' => 'indetermine',
             'sociolect' => 'standard',
             'cultural_references' => [],
-            'generational_marker' => 'ind�termin�',
-            'social_class_signals' => 'ind�termin�',
-            'political_signals' => 'ind�termin�',
+            'generational_marker' => 'indetermine',
+            'social_class_signals' => 'indetermine',
+            'political_signals' => 'indetermine',
             'individualism_score' => 50,
             'conformity_score' => 50,
             'community_signals' => []
@@ -323,8 +265,8 @@ if (empty($ana_b)) {
 
 $ana_a['source_text'] = $message;
 
-$msg_id = save_message($session, 'user',      $message,    $tokens_in,  0,           $model_reply, $total_latency);
-          save_message($session, 'assistant',  $reply_raw,  0,           $tokens_out, $model_reply, $total_latency);
+$msg_id = save_message($session, 'user', $message, $tokens_in, 0, $model_reply, $total_latency);
+save_message($session, 'assistant', $reply_raw, 0, $tokens_out, $model_reply, $total_latency);
 save_analysis($session, $msg_id, $ana_a, $ana_b);
 
 $stats = get_session_stats($session);
