@@ -310,6 +310,35 @@
 
   </aside><!-- /analysis-panel -->
 
+  <!-- ═══ COGNITIVE PANEL (Analyse Cognitive) ══════════════════ -->
+  <main class="cognitive-panel" style="display:none;">
+    <div class="panel-header">
+      <div class="panel-title">ANALYSE COGNITIVE GLOBALE</div>
+      <div class="panel-sub">Vue d'ensemble de toutes les sessions analysées</div>
+    </div>
+    <div class="panel-content" id="cognitive-content">
+      <div class="loading-state">Chargement des données cognitives…</div>
+    </div>
+  </main>
+
+  <!-- ═══ HISTORY PANEL ════════════════════════════════════════ -->
+  <main class="history-panel" style="display:none;">
+    <div class="panel-header">
+      <div class="panel-title">HISTORIQUE DES MESSAGES</div>
+      <div class="panel-sub">Tous les messages de la session courante</div>
+    </div>
+    <div class="panel-content" id="history-content"></div>
+  </main>
+
+  <!-- ═══ SYSTEM PANEL ═════════════════════════════════════════ -->
+  <main class="system-panel" style="display:none;">
+    <div class="panel-header">
+      <div class="panel-title">SYSTÈME</div>
+      <div class="panel-sub">Informations techniques et statut</div>
+    </div>
+    <div class="panel-content" id="system-content"></div>
+  </main>
+
 </div><!-- /app-shell -->
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

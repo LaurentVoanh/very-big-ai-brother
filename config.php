@@ -13,11 +13,11 @@ define('MISTRAL_KEYS', [
 
 $GLOBALS['models'] = [
     'chat'      => 'open-mistral-nemo',
-    'analysis'  => 'mistral-small-latest',
-    'reasoning' => 'mistral-large-latest',
-    'creative'  => 'mistral-small-latest',
-    'code'      => 'codestral-latest',
-    'fast'      => 'ministral-3b-latest',
+    'analysis'  => 'mistral-small-2506',
+    'reasoning' => 'mistral-large-2411',
+    'creative'  => 'mistral-small-2506',
+    'code'      => 'codestral-2508',
+    'fast'      => 'ministral-3b-2508',
 ];
 
 function select_model(string $task = 'chat'): string {
