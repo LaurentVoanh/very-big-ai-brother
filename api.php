@@ -113,7 +113,7 @@ $system_analysis_b = "Tu es NEXUS-B, moteur d'analyse sociolinguistique, comport
   \"anomaly_signals\": [\"string\"]
 }";
 
-// ── cURL multi ──────────────────────────────────────────────
+// ── cURL multi avec rotation des clés et délais ──────────────────────────────────────────────
 $key_r  = get_key('responder');
 $key_a1 = get_key('analyzer1');
 $key_a2 = get_key('analyzer2');
@@ -146,10 +146,31 @@ $payloads = [
 
 $keys_map = ['reply'=>$key_r,'analysis_a'=>$key_a1,'analysis_b'=>$key_a2];
 $results = [];
+$errors = [];
 $t_start = microtime(true);
 
-// Requêtes séquentielles pour respecter la limite de 1 req/s de Mistral
-foreach ($payloads as $name => $payload) {
+
+// Vérification des clés API avant de commencer
+$invalid_keys = [];
+foreach ($keys_map as $role => $key) {
+    if (empty($key) || strpos($key, 'VOTRE_CLE') !== false || strlen($key) < 10) {
+        $invalid_keys[] = $role;
+    }
+}
+
+if (!empty($invalid_keys)) {
+    echo json_encode([
+        'error' => 'Clés API manquantes ou invalides. Veuillez configurer vos clés Mistral dans config.php. Rôles invalides: ' . implode(', ',$invalid_keys),
+        'timestamp' => date('H:i:s'),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+// Rotation circulaire des clés avec délais pour éviter le rate limiting (1 req/s Mistral)
+$payload_keys = array_keys($payloads);
+$total_payloads = count($payload_keys);
+
+foreach ($payload_keys as $index => $name) {
+    $payload = $payloads[$name];
     $ch = curl_init(MISTRAL_API);
     curl_setopt_array($ch, [
         CURLOPT_HTTPHEADER     => ['Authorization: Bearer '.$keys_map[$name],'Content-Type: application/json'],
@@ -160,26 +181,146 @@ foreach ($payloads as $name => $payload) {
     ]);
     
     $response = curl_exec($ch);
-    $results[$name] = json_decode($response, true);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    
+    if ($response && $http_code === 200) {
+        $results[$name] = json_decode($response, true);
+    } else {
+        $errors[$name] = $curl_error ?: "HTTP $http_code";
+        $results[$name] = null;
+        error_log("AETHER API Error [$name]: HTTP $http_code - " . ($curl_error ?: 'Unknown error'));
+    }
     
     curl_close($ch);
     
-    // Petit délai entre les requêtes pour éviter le rate limiting
-    if (next($payloads)) {
-        usleep(1100000); // 1.1 seconde de pause
+    // Délai entre les requêtes pour respecter la limite de 1 req/s de Mistral
+    // On attend seulement s'il reste des requêtes à faire
+    if ($index < $total_payloads - 1) {
+        usleep(1200000); // 1.2 secondes de pause pour être sûr
     }
 }
 
 $total_latency = (int)((microtime(true) - $t_start) * 1000);
 
-$reply_raw  = $results['reply']['choices'][0]['message']['content'] ?? 'Erreur de connexion.';
-$tokens_in  = $results['reply']['usage']['prompt_tokens'] ?? 0;
-$tokens_out = $results['reply']['usage']['completion_tokens'] ?? 0;
+// R�cup�ration de la r�ponse principale (reply) - critique pour le chat
+$reply_raw = 'Erreur de connexion.';
+$tokens_in = 0;
+$tokens_out = 0;
 
-$ana_a_raw = $results['analysis_a']['choices'][0]['message']['content'] ?? '{}';
-$ana_b_raw = $results['analysis_b']['choices'][0]['message']['content'] ?? '{}';
+if (!empty($results['reply']) && isset($results['reply']['choices'][0]['message']['content'])) {
+    $reply_raw = $results['reply']['choices'][0]['message']['content'];
+    $tokens_in = $results['reply']['usage']['prompt_tokens'] ?? 0;
+    $tokens_out = $results['reply']['usage']['completion_tokens'] ?? 0;
+} else {
+    // Si la r�ponse principale a �chou�, on retourne une erreur claire
+    $error_msg = !empty($errors['reply']) ? $errors['reply'] : 'R�ponse IA indisponible';
+    echo json_encode([
+        'error' => $error_msg,
+        'timestamp' => date('H:i:s'),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Analyses secondaires - on fournit des valeurs par d�faut si elles �chouent
+$ana_a_raw = !empty($results['analysis_a']['choices'][0]['message']['content']) 
+    ? $results['analysis_a']['choices'][0]['message']['content'] 
+    : '{}';
+$ana_b_raw = !empty($results['analysis_b']['choices'][0]['message']['content']) 
+    ? $results['analysis_b']['choices'][0]['message']['content'] 
+    : '{}';
+
 $ana_a = json_decode($ana_a_raw, true) ?? [];
 $ana_b = json_decode($ana_b_raw, true) ?? [];
+
+// Valeurs par d�faut pour l'analyse A si elle a �chou�
+if (empty($ana_a)) {
+    $ana_a = [
+        'sentiment' => 'neutre',
+        'sentiment_score' => 50,
+        'emotion_primary' => 'ind�termin�',
+        'emotion_secondary' => null,
+        'emotion_tertiary' => null,
+        'tone' => 'neutre',
+        'style_formal' => 50,
+        'style_assertive' => 50,
+        'style_creative' => 50,
+        'psychological' => [
+            'big5_openness' => 50,
+            'big5_conscientiousness' => 50,
+            'big5_extraversion' => 50,
+            'big5_agreeableness' => 50,
+            'big5_neuroticism' => 50,
+            'stress_level' => 30,
+            'cognitive_dissonance' => 20,
+            'motivation_type' => 'ind�termin�e',
+            'maslow_level' => 'ind�termin�',
+            'attachment_style' => 'ind�termin�',
+            'locus_control' => 'mixte',
+            'defense_mechanisms' => []
+        ],
+        'marketing' => [
+            'buyer_persona' => 'ind�termin�',
+            'decision_style' => 'ind�termin�',
+            'pain_points' => [],
+            'desires' => [],
+            'objection_likelihood' => 50,
+            'engagement_score' => 50,
+            'brand_affinity_signals' => [],
+            'price_sensitivity' => 'ind�termin�e',
+            'urgency_level' => 50,
+            'trust_signals' => [],
+            'persuasion_susceptibility' => 50
+        ],
+        'source_text' => $message
+    ];
+}
+
+// Valeurs par d�faut pour l'analyse B si elle a �chou�
+if (empty($ana_b)) {
+    $ana_b = [
+        'complexity' => 50,
+        'vocabulary_richness' => 50,
+        'intent' => 'ind�termin�',
+        'themes' => [],
+        'keywords' => [],
+        'language_patterns' => [],
+        'rhetorical_devices' => [],
+        'cognitive_load' => 50,
+        'information_density' => 50,
+        'certainty_level' => 50,
+        'sociological' => [
+            'estimated_education' => 'ind�termin�',
+            'sociolect' => 'standard',
+            'cultural_references' => [],
+            'generational_marker' => 'ind�termin�',
+            'social_class_signals' => 'ind�termin�',
+            'political_signals' => 'ind�termin�',
+            'individualism_score' => 50,
+            'conformity_score' => 50,
+            'community_signals' => []
+        ],
+        'behavioral' => [
+            'decision_readiness' => 50,
+            'risk_tolerance' => 50,
+            'information_seeking' => 50,
+            'authority_deference' => 50,
+            'novelty_seeking' => 50,
+            'cognitive_biases' => [],
+            'communication_needs' => [],
+            'consistency_bias' => 50
+        ],
+        'linguistic_fingerprint' => [
+            'lexical_diversity' => 50,
+            'hedging_frequency' => 50,
+            'sentence_structure' => 'mixte',
+            'voice' => 'active',
+            'punctuation_style' => 'standard'
+        ],
+        'anomaly_signals' => []
+    ];
+}
+
 $ana_a['source_text'] = $message;
 
 $msg_id = save_message($session, 'user',      $message,    $tokens_in,  0,           $model_reply, $total_latency);

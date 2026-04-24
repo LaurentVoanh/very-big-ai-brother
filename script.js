@@ -129,7 +129,10 @@ async function sendMessage() {
 
     if (data.error) {
       appendMessage('assistant', `⚠ ERREUR: ${data.error}`);
-      setAnalysisStatus('idle', '◈ ERREUR — Vérifiez vos clés API');
+      setAnalysisStatus('idle', '◈ ERREUR — ' + (data.error || 'Vérifiez vos clés API'));
+      isProcessing = false;
+      sendBtn.disabled = false;
+      msgInput.focus();
       return;
     }
 
@@ -144,11 +147,13 @@ async function sendMessage() {
   } catch (err) {
     typingEl.remove();
     appendMessage('assistant', '⚠ Erreur réseau. Vérifiez votre connexion.');
-    setAnalysisStatus('idle', '◈ ERREUR RÉSEAU');
+    setAnalysisStatus('idle', '◈ ERREUR RÉSEAU — ' + err.message);
   } finally {
-    isProcessing = false;
-    sendBtn.disabled = false;
-    msgInput.focus();
+    if (isProcessing) {
+      isProcessing = false;
+      sendBtn.disabled = false;
+      msgInput.focus();
+    }
   }
 }
 
