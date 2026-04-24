@@ -3,6 +3,32 @@
 // AETHER v4.0 — CONFIG
 // ============================================================
 
+// Activer les logs d'erreur globalement
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+// Chemin absolu pour les logs
+$logFile = __DIR__ . '/logs/error.log';
+if (!is_dir(dirname($logFile))) {
+    mkdir(dirname($logFile), 0755, true);
+}
+ini_set('error_log', $logFile);
+
+// Démarrer la session IMMÉDIATEMENT - CRITIQUE pour Hostinger
+if (session_status() === PHP_SESSION_NONE) {
+    // Configuration de la session avant démarrage
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_secure', '0'); // Mettre à 1 si HTTPS uniquement
+    
+    if (!session_start()) {
+        error_log("AETHER: Échec du démarrage de session");
+    } else {
+        error_log("AETHER: Session démarrée avec succès - SID: " . session_id());
+    }
+}
+
 // REMPLACEZ CES CLÉS PAR VOS VRAIES CLÉS API MISTRAL
 // Vous pouvez les obtenir sur https://console.mistral.ai/
 define('MISTRAL_KEYS', [
@@ -39,6 +65,5 @@ function get_key(string $role = 'responder'): string {
 define('DB_PATH', __DIR__ . '/db/aether.sqlite');
 define('MISTRAL_API', 'https://api.mistral.ai/v1/chat/completions');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// La session est déjà démarrée plus haut dans ce fichier
+// Cette vérification est gardée pour sécurité supplémentaire

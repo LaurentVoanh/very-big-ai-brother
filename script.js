@@ -154,8 +154,23 @@ async function sendMessage() {
     const res = await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, mode: currentMode, model: currentModel })
+      body: JSON.stringify({ message: text, mode: currentMode, model: currentModel }),
+      credentials: 'same-origin' // Important pour les sessions sur Hostinger
     });
+
+    // Vérifier si la réponse est OK avant de parser le JSON
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('AETHER: Erreur HTTP', res.status, res.statusText, errorText);
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const rawText = await res.text();
+      console.error('AETHER: Réponse non-JSON reçue:', rawText.substring(0, 500));
+      throw new Error('Réponse serveur invalide (non-JSON)');
+    }
 
     const data = await res.json();
     typingEl.remove();
@@ -163,12 +178,14 @@ async function sendMessage() {
     if (data.error) {
       appendMessage('assistant', `⚠ ERREUR: ${data.error}`);
       setAnalysisStatus('idle', '◈ ERREUR — ' + (data.error || 'Vérifiez vos clés API'));
+      console.error('AETHER: Erreur API:', data);
       isProcessing = false;
       sendBtn.disabled = false;
       msgInput.focus();
       return;
     }
 
+    console.log('AETHER: Réponse reçue avec succès', data.meta);
     appendMessage('assistant', data.reply, data.timestamp, data.meta);
     totalMsgs++;
     totalTokens += (data.meta?.tokens?.in || 0) + (data.meta?.tokens?.out || 0);
@@ -179,7 +196,16 @@ async function sendMessage() {
 
   } catch (err) {
     typingEl.remove();
-    appendMessage('assistant', '⚠ Erreur réseau. Vérifiez votre connexion.');
+    console.error('AETHER: Erreur réseau détaillée:', err);
+    
+    let errorMsg = '⚠ Erreur réseau. Vérifiez votre connexion.';
+    if (err.message.includes('HTTP')) {
+      errorMsg = `⚠ Erreur serveur: ${err.message}`;
+    } else if (err.message.includes('non-JSON')) {
+      errorMsg = '⚠ Réponse serveur invalide. Contactez l\'administrateur.';
+    }
+    
+    appendMessage('assistant', errorMsg);
     setAnalysisStatus('idle', '◈ ERREUR RÉSEAU — ' + err.message);
   } finally {
     if (isProcessing) {
