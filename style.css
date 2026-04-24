@@ -836,3 +836,109 @@ body {
 
 /* Charts */
 canvas { max-width: 100%; }
+
+/* ════════════════════════════════════════════════
+   STYLES COMPLÉMENTAIRES POUR PANOPTICON v4.0
+════════════════════════════════════════════════ */
+
+/* Stats grid in sidebar */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.stat-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .4rem .5rem; text-align: center; }
+.stat-val { display: block; font-family: 'Orbitron', sans-serif; font-size: .85rem; color: var(--accent); font-weight: 700; }
+.stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-dim); letter-spacing: .5px; }
+
+/* Sentiment track with NEG/POS labels */
+.sentiment-track { display: flex; align-items: center; gap: .4rem; }
+.st-neg { font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--danger); min-width: 28px; }
+.st-pos { font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--accent3); }
+.sentiment-bar-outer { flex: 1; height: 6px; background: linear-gradient(90deg, var(--danger), var(--warn), var(--accent3)); border-radius: 3px; position: relative; overflow: visible; }
+.sentiment-cursor { position: absolute; top: -4px; width: 2px; height: 14px; background: #fff; border-radius: 1px; transition: left .8s cubic-bezier(.4,0,.2,1); transform: translateX(-50%); box-shadow: 0 0 6px #fff; }
+
+/* Emotion tags variants */
+.emo-tag.primary { background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); color: var(--accent); }
+.emo-tag.secondary { background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.25); color: var(--accent2); }
+.emo-tag.tertiary { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); color: var(--accent4); }
+
+/* Big5 labels */
+.big5-labels { display: flex; justify-content: space-around; font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-dim); margin-top: .2rem; letter-spacing: 1px; }
+.big5-labels span { cursor: help; }
+
+/* Psycho meters and grid */
+.psych-meters, .mkt-meters, .socio-meters, .beh-meters { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .5rem; }
+.meter-row { display: grid; grid-template-columns: 90px 1fr 30px; align-items: center; gap: .4rem; font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-dim); }
+.meter-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.meter-fill { height: 100%; border-radius: 2px; transition: width .9s cubic-bezier(.4,0,.2,1); width: 0; }
+.meter-fill.green { background: var(--accent3); }
+.meter-fill.warn { background: var(--warn); }
+.meter-fill.danger { background: var(--danger); }
+.meter-fill.accent { background: var(--accent); }
+.meter-fill.purple { background: var(--purple); }
+
+.psycho-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin-top: .5rem; }
+.pg-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .35rem .45rem; }
+.pg-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-dim); letter-spacing: 1px; }
+.pg-val { display: block; font-family: 'Rajdhani', sans-serif; font-size: .75rem; color: var(--text); font-weight: 500; }
+
+/* Marketing persona */
+.mkt-persona { background: linear-gradient(135deg, rgba(0,229,255,.06), transparent); border: 1px solid rgba(0,229,255,.15); border-radius: 3px; padding: .5rem .6rem; font-family: 'Orbitron', sans-serif; font-size: .7rem; color: var(--accent); text-align: center; margin-bottom: .5rem; letter-spacing: 1px; }
+.mkt-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .25rem; font-size: .75rem; }
+
+/* Socio grid */
+.socio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin-bottom: .5rem; }
+.sg-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .35rem .45rem; }
+.sg-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-dim); letter-spacing: 1px; }
+.sg-val { display: block; font-family: 'Rajdhani', sans-serif; font-size: .75rem; color: var(--text); font-weight: 500; }
+
+/* Structure grid 6 */
+.struct-grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; margin-bottom: .5rem; }
+.struct-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .4rem .35rem; text-align: center; }
+.struct-val { display: block; font-family: 'Orbitron', sans-serif; font-size: .8rem; color: var(--accent); font-weight: 700; }
+.struct-label { font-family: 'Share Tech Mono', monospace; font-size: .5rem; color: var(--text-dim); letter-spacing: .5px; margin-top: .15rem; }
+
+/* Linguistic grid */
+.ling-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin-bottom: .5rem; }
+.lg-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .35rem .45rem; }
+.lg-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-dim); letter-spacing: 1px; }
+.lg-val { display: block; font-family: 'Rajdhani', sans-serif; font-size: .75rem; color: var(--text); font-weight: 500; }
+
+/* Meta grid */
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; }
+.mg-label { font-family: 'Share Tech Mono', monospace; font-size: .55rem; color: var(--text-dim); letter-spacing: 1px; }
+.mg-val { font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--accent); }
+
+/* Intent badge */
+.intent-badge { display: inline-block; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.3); border-radius: 3px; padding: .25rem .6rem; font-family: 'Orbitron', sans-serif; font-size: .65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: .4rem; }
+
+/* Tags */
+.tags-wrap { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 24px; }
+.tag { display: inline-block; background: var(--bg3); border: 1px solid var(--border2); border-radius: 2px; padding: .15rem .45rem; font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-dim); transition: all .2s; animation: tag-in .3s ease-out both; }
+.tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,.05); }
+@keyframes tag-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Tag variants */
+.tag-theme { border-color: rgba(0,229,255,.2); color: var(--accent); }
+.tag-keyword { border-color: rgba(124,58,237,.2); color: var(--accent2); }
+.tag-pattern { border-color: rgba(245,158,11,.2); color: var(--accent4); }
+.tag-device { border-color: rgba(16,185,129,.2); color: var(--accent3); }
+.tag-bias { border-color: rgba(239,68,68,.2); color: var(--danger); }
+.tag-anomaly { border-color: rgba(255,100,100,.3); color: #ff6b6b; background: rgba(255,100,100,.05); }
+.tag-defense { border-color: rgba(139,92,246,.2); color: var(--purple); }
+.tag-pain { border-color: rgba(239,68,68,.25); color: var(--danger); }
+.tag-desire { border-color: rgba(245,158,11,.25); color: var(--accent4); }
+.tag-cult { border-color: rgba(0,229,255,.15); }
+.tag-comm { border-color: rgba(16,185,129,.2); }
+.tag-need { border-color: rgba(124,58,237,.15); }
+
+.no-data { font-family: 'Share Tech Mono', monospace; font-size: .6rem; color: var(--text-muted); }
+
+/* Navigation items */
+.side-nav { padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.nav-item { display: flex; align-items: center; gap: .6rem; padding: .55rem 1rem; color: var(--text-dim); text-decoration: none; font-size: .75rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; transition: all .2s; border-left: 2px solid transparent; }
+.nav-item:hover, .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,229,255,.05); }
+.nav-icon { font-size: .9rem; width: 20px; text-align: center; }
+
+/* Chat time display */
+#chat-time { color: var(--text-dim); }
+
+/* Input complexity */
+#input-complexity { color: var(--accent4); }
