@@ -944,170 +944,355 @@ canvas { max-width: 100%; }
 #input-complexity { color: var(--accent4); }
 
 /* ═══════════════════════════════════════════════════
-   NOUVEAUX PANELS (History, System, Cognitive)
+   AETHER v4.0 — SECTIONS NAVIGATION (Ajout)
 ═══════════════════════════════════════════════════ */
-.history-panel, .system-panel, .cognitive-panel {
-  flex: 1;
+
+/* Panels sections */
+.section-panel { display: none; height: 100%; overflow-y: auto; padding: 1rem; }
+.section-panel.active { display: block; }
+.section-panel::-webkit-scrollbar { width: 3px; }
+.section-panel::-webkit-scrollbar-track { background: transparent; }
+.section-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* Chat panel doit rester flex quand actif */
+#section-chat.active { display: flex; flex-direction: column; padding: 0; }
+
+/* Loading / empty states */
+.loading-msg, .empty-msg, .error-msg {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .75rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 2rem;
+  letter-spacing: 1px;
+}
+.error-msg { color: var(--danger); }
+
+/* Historique */
+.history-row { border: 1px solid var(--border); border-radius: 4px; padding: .7rem .9rem; margin-bottom: .5rem; }
+.history-row.user { border-left: 2px solid var(--accent); background: rgba(0,229,255,.03); }
+.history-row.assistant { border-left: 2px solid var(--accent2); background: rgba(124,58,237,.03); }
+.history-role { font-family: 'Share Tech Mono', monospace; font-size: .6rem; color: var(--text-dim); letter-spacing: 2px; margin-bottom: .3rem; }
+.history-content { font-size: .8rem; color: var(--text); line-height: 1.5; margin-bottom: .4rem; word-break: break-word; }
+.history-meta { font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-muted); }
+
+/* Big Brother / Analyse Cognitive */
+.bb-header {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .75rem;
+  color: var(--danger);
+  letter-spacing: 2px;
+  text-align: center;
+  padding: .75rem;
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background: rgba(239,68,68,.04);
+  text-shadow: 0 0 20px rgba(239,68,68,.4);
+}
+
+.profiles-grid { display: flex; flex-direction: column; gap: .75rem; }
+
+.profile-card {
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: .8rem;
+  background: var(--bg3);
+  transition: border-color .2s;
+}
+.profile-card:hover { border-color: var(--accent); }
+
+.profile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+.profile-sid { font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--accent); letter-spacing: 1px; }
+.profile-count { font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-dim); }
+
+.profile-meters { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .5rem; }
+.pm-item { display: grid; grid-template-columns: 100px 1fr 30px; gap: .4rem; align-items: center; font-size: .65rem; font-family: 'Share Tech Mono', monospace; color: var(--text-dim); }
+.meter-track.sm { height: 4px; background: var(--bg); border-radius: 2px; }
+
+.profile-tags { display: flex; flex-wrap: wrap; gap: .25rem; }
+
+/* Système */
+.sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: 1rem; }
+.sys-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: .5rem .6rem; }
+.sys-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: .55rem; color: var(--text-dim); letter-spacing: 1px; margin-bottom: .2rem; }
+.sys-val { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: var(--accent); }
+
+.sys-keys-status { border: 1px solid var(--border); border-radius: 4px; padding: .6rem; }
+.key-row-sys { display: flex; align-items: center; gap: .5rem; font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--text-dim); padding: .2rem 0; letter-spacing: 1px; }
+.dot-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — LOGIN MODAL
+═══════════════════════════════════════════════════════════ */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(6,8,16,.97);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.login-overlay.hidden { display: none; }
+
+.login-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 0 60px rgba(0,229,255,.1);
+  animation: login-in .4s ease-out;
+}
+@keyframes login-in { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+.login-logo { font-size: 2.5rem; color: var(--accent); text-align: center; filter: drop-shadow(0 0 12px var(--accent)); animation: pulse-glow 3s infinite; margin-bottom: .5rem; }
+.login-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; color: var(--accent); text-align: center; letter-spacing: 4px; margin-bottom: .25rem; }
+.login-sub { font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--text-dim); text-align: center; letter-spacing: 2px; margin-bottom: 2rem; }
+.login-label { font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--text-dim); letter-spacing: 2px; display: block; margin-bottom: .5rem; }
+.login-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); padding: .85rem 1rem; font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem; border-radius: 4px; margin-bottom: 1.2rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+.login-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 20px rgba(0,229,255,.12); }
+.login-btn {
+  width: 100%; background: var(--accent); border: none; color: var(--bg);
+  padding: .9rem; font-family: 'Orbitron', sans-serif; font-size: .8rem;
+  font-weight: 700; letter-spacing: 3px; cursor: pointer; border-radius: 4px;
+  transition: all .2s;
+}
+.login-btn:hover { background: #33ecff; box-shadow: 0 0 30px rgba(0,229,255,.4); }
+.login-btn:disabled { background: var(--border2); color: var(--text-dim); cursor: not-allowed; }
+.login-error { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: var(--danger); text-align: center; margin-top: .8rem; min-height: 1em; }
+.login-hint { font-family: 'Share Tech Mono', monospace; font-size: .6rem; color: var(--text-muted); text-align: center; margin-top: 1rem; line-height: 1.6; }
+
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — USER BADGE SIDEBAR
+═══════════════════════════════════════════════════════════ */
+.user-badge {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem; border-bottom: 1px solid var(--border);
+  background: rgba(0,229,255,.03);
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-size: .7rem; color: var(--bg); font-weight: 700;
+  flex-shrink: 0;
+}
+.user-email { font-family: 'Share Tech Mono', monospace; font-size: .6rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-since { font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — CHAT SCROLL FIX (CRITIQUE)
+═══════════════════════════════════════════════════════════ */
+.chat-panel {
+  display: flex; flex-direction: column;
   background: var(--bg2);
-  border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
+  min-height: 0; /* Fix flex child overflow */
   overflow: hidden;
 }
 
-.panel-header {
-  background: linear-gradient(90deg, rgba(0,229,255,.08), transparent);
-  border-bottom: 1px solid var(--border);
-  padding: .7rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: .2rem;
+#section-chat.active {
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0; padding: 0;
+  height: 100%;
 }
 
-.panel-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: .85rem;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.panel-sub {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: .6rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-
-.panel-content {
+.messages-container {
   flex: 1;
+  min-height: 0; /* CRITIQUE : permet au flex child de scroll */
   overflow-y: auto;
-  padding: 1rem;
-}
-
-.panel-content::-webkit-scrollbar { width: 4px; }
-.panel-content::-webkit-scrollbar-track { background: transparent; }
-.panel-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-/* History items */
-.history-item {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: .7rem .9rem;
-  margin-bottom: .6rem;
-  animation: fade-in .3s ease-out;
-}
-
-@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-.history-meta {
-  display: flex;
-  gap: .8rem;
-  align-items: center;
-  margin-bottom: .4rem;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: .6rem;
-}
-
-.history-role {
-  padding: .1rem .4rem;
-  border-radius: 2px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.history-role.user { background: rgba(124,58,237,.2); color: var(--accent2); }
-.history-role.assistant { background: rgba(0,229,255,.2); color: var(--accent); }
-
-.history-time { color: var(--text-dim); }
-.history-tokens { color: var(--accent4); }
-
-.history-content {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: .85rem;
-  line-height: 1.5;
-  color: var(--text);
-  white-space: pre-wrap;
-}
-
-/* System grid */
-.system-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: .6rem;
-}
-
-.sys-item {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: .6rem .8rem;
+  overflow-x: hidden;
+  padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: .2rem;
-}
-
-.sys-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: .55rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.sys-val {
-  font-family: 'Orbitron', sans-serif;
-  font-size: .8rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.sys-val.status-ok { color: var(--success); }
-.sys-val.status-err { color: var(--danger); }
-
-/* Empty/Error states */
-.empty-state, .error-state, .loading-state {
-  text-align: center;
-  padding: 2rem;
-  font-family: 'Share Tech Mono', monospace;
-  color: var(--text-dim);
-}
-
-.error-state { color: var(--danger); }
-.loading-state { color: var(--accent); }
-
-/* Cognitive panel stats */
-.cognitive-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: .8rem;
-  margin-bottom: 1.5rem;
+  scroll-behavior: smooth;
 }
 
-.cog-stat {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: .8rem;
-  text-align: center;
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — SECTION STATES BELLE VERSION
+═══════════════════════════════════════════════════════════ */
+.section-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 60%; gap: 1rem;
 }
-
-.cog-stat-val {
-  display: block;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: .3rem;
+.section-loading .loading-icon {
+  font-size: 2.5rem; color: var(--accent);
+  animation: spin-slow 3s linear infinite;
+  filter: drop-shadow(0 0 12px var(--accent));
 }
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.section-loading .loading-text {
+  font-family: 'Share Tech Mono', monospace; font-size: .75rem;
+  color: var(--text-dim); letter-spacing: 3px; text-align: center;
+}
+.loading-dots { display: inline-flex; gap: .3rem; }
+.loading-dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  animation: dot-bounce .8s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: .15s; }
+.loading-dots span:nth-child(3) { animation-delay: .3s; }
 
-.cog-stat-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: .55rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
+/* Section idle state */
+.section-idle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 60%; gap: 1.2rem; padding: 2rem;
+}
+.section-idle-icon { font-size: 3rem; color: var(--border2); filter: drop-shadow(0 0 8px var(--border2)); }
+.section-idle-title { font-family: 'Orbitron', sans-serif; font-size: .85rem; color: var(--text-dim); letter-spacing: 3px; text-align: center; }
+.section-idle-sub { font-family: 'Share Tech Mono', monospace; font-size: .65rem; color: var(--text-muted); letter-spacing: 1px; text-align: center; line-height: 1.8; }
+
+/* Memory context badge */
+.memory-badge {
+  background: rgba(124,58,237,.08); border: 1px solid rgba(124,58,237,.2);
+  border-radius: 4px; padding: .6rem .8rem; margin-bottom: .75rem;
+  font-family: 'Share Tech Mono', monospace; font-size: .62rem; color: var(--accent2);
   letter-spacing: 1px;
+}
+.memory-badge strong { color: var(--accent); display: block; margin-bottom: .2rem; letter-spacing: 2px; }
+
+/* Nouvelle section : Graphiques additionnels */
+.charts-section { padding: .9rem 1rem; border-bottom: 1px solid var(--border); }
+.big5-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: .25rem; margin-top: .4rem; }
+.big5-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.big5-bar-outer { width: 100%; height: 50px; background: var(--border); border-radius: 2px; position: relative; display: flex; align-items: flex-end; overflow: hidden; }
+.big5-bar-fill { width: 100%; background: linear-gradient(0deg, var(--accent2), var(--accent)); border-radius: 2px 2px 0 0; transition: height .9s cubic-bezier(.4,0,.2,1); }
+.big5-bar-label { font-family: 'Share Tech Mono', monospace; font-size: .5rem; color: var(--text-dim); text-align: center; letter-spacing: .5px; }
+.big5-bar-val { font-family: 'Orbitron', sans-serif; font-size: .6rem; color: var(--accent); }
+
+/* Gauge donut mini */
+.gauge-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .5rem; }
+.gauge-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: .5rem; text-align: center; }
+.gauge-val { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.gauge-label { font-family: 'Share Tech Mono', monospace; font-size: .55rem; color: var(--text-dim); letter-spacing: 1px; margin-top: .2rem; }
+
+/* Section style bars */
+.style-meters { display: flex; flex-direction: column; gap: .35rem; }
+.style-meter-row { display: grid; grid-template-columns: 60px 1fr 28px; align-items: center; gap: .4rem; font-family: 'Share Tech Mono', monospace; font-size: .58rem; color: var(--text-dim); }
+.style-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.style-fill { height: 100%; border-radius: 2px; transition: width .9s cubic-bezier(.4,0,.2,1); width: 0; }
+.style-fill.accent  { background: var(--accent); }
+.style-fill.purple  { background: var(--accent2); }
+.style-fill.green   { background: var(--accent3); }
+
+/* Sentiment track amélioré */
+.sentiment-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+.sentiment-track { height: 5px; background: linear-gradient(90deg,var(--danger),var(--accent4) 50%,var(--accent3)); border-radius: 3px; margin-bottom: .5rem; position: relative; }
+.sentiment-bar { position: absolute; left: 0; top: 0; height: 100%; opacity: .3; background: var(--accent3); border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.emotion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin-bottom: .3rem; }
+.emotion-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: .35rem .4rem; }
+.emo-label { display: block; font-family: 'Share Tech Mono', monospace; font-size: .52rem; color: var(--text-dim); }
+.emo-val { font-family: 'Rajdhani', sans-serif; font-size: .78rem; color: var(--text); font-weight: 500; }
+
+.mt-half { margin-top: .4rem; }
+.accent { color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — MOBILE RESPONSIVE (< 768px)
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body { overflow: hidden; }
+
+  .app-shell {
+    display: flex; flex-direction: column;
+    height: 100dvh; /* dynamic viewport height */
+    width: 100%;
+  }
+
+  /* Sidebar → bottom navigation bar */
+  .sidebar {
+    order: 3;
+    flex-direction: row;
+    width: 100%; height: auto;
+    border-right: none; border-top: 1px solid var(--border);
+    overflow-x: auto; overflow-y: hidden;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .brand-block, .status-bar, .sidebar-section, .clear-btn, .user-badge { display: none; }
+
+  .side-nav {
+    display: flex; flex-direction: row; padding: 0;
+    border-bottom: none; width: 100%;
+  }
+
+  .nav-item {
+    flex: 1; flex-direction: column; justify-content: center;
+    padding: .5rem .25rem; font-size: .55rem; gap: .2rem;
+    border-left: none; border-top: 2px solid transparent; text-align: center;
+    min-width: 0;
+  }
+  .nav-item:hover, .nav-item.active {
+    border-left: none; border-top-color: var(--accent);
+  }
+  .nav-icon { font-size: 1.1rem; width: auto; }
+
+  /* Chat panel → order 1, takes all space */
+  .chat-panel { order: 1; flex: 1; min-height: 0; border-right: none; }
+
+  /* Analysis panel → hidden on mobile, shown via toggle */
+  .analysis-panel {
+    order: 2; flex-shrink: 0;
+    height: 0; overflow: hidden; transition: height .3s ease;
+    border-left: none; border-top: 1px solid var(--border);
+  }
+  .analysis-panel.mobile-open { height: 45dvh; overflow-y: auto; }
+
+  /* Mobile toggle button */
+  .mobile-nexus-btn {
+    position: fixed; bottom: 60px; right: 12px; z-index: 500;
+    background: var(--accent2); border: none; border-radius: 50%;
+    width: 44px; height: 44px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: #fff;
+    box-shadow: 0 4px 20px rgba(124,58,237,.5);
+    transition: all .2s;
+  }
+  .mobile-nexus-btn:active { transform: scale(.9); }
+  .mobile-nexus-btn.active { background: var(--accent); box-shadow: 0 4px 20px rgba(0,229,255,.5); }
+
+  /* Chat header simplifié */
+  .chat-header { padding: .5rem .8rem; }
+  .chat-title { font-size: .6rem; }
+  .chat-meta { display: none; }
+
+  /* Messages */
+  .messages-container { padding: .8rem; gap: .6rem; }
+  .msg-bubble { max-width: 92%; font-size: .85rem; }
+
+  /* Input zone */
+  .input-zone { padding: .5rem .8rem; }
+  .input-meta { display: none; }
+  #msg-input { font-size: .9rem; padding: .6rem .8rem; }
+  #send-btn { width: 40px; height: 40px; }
+
+  /* Sections scrollable */
+  .section-panel { padding: .8rem; }
+
+  /* Analysis blocks dans le panel mobile */
+  .analysis-panel .block-title { font-size: .6rem; }
+  .meter-row { grid-template-columns: 75px 1fr 24px; font-size: .55rem; }
+
+  /* Login card mobile */
+  .login-card { margin: 1rem; padding: 2rem 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .msg-bubble { max-width: 98%; font-size: .82rem; }
+  .login-card { padding: 1.5rem 1rem; }
+  .login-title { font-size: 1rem; letter-spacing: 2px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AETHER v4.0 — WARN COLOR VAR FIX
+═══════════════════════════════════════════════════════════ */
+:root {
+  --warn:   #f59e0b;
+  --purple: #7c3aed;
 }

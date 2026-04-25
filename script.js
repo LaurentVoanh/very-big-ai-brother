@@ -1,137 +1,138 @@
 /* ═══════════════════════════════════════════════════
-   AETHER v4.0 — FRONTEND LOGIC
+   AETHER v4.0 — SCRIPT COMPLET (2-PHASE + LOGIN + MOBILE)
 ═══════════════════════════════════════════════════ */
 
-// ── State ───────────────────────────────────────────────────
+'use strict';
+
+// ── State ────────────────────────────────────────────────────
 let currentMode  = 'normal';
 let currentModel = 'chat';
 let totalTokens  = 0;
 let totalMsgs    = 0;
 let styleChart   = null;
 let structChart  = null;
-let big5Chart    = null;
 let isProcessing = false;
+let isLoggedIn   = false;
+let allAnalyses  = [];
 
-// ── DOM refs ────────────────────────────────────────────────
+// ── DOM refs ─────────────────────────────────────────────────
 const msgInput    = document.getElementById('msg-input');
 const sendBtn     = document.getElementById('send-btn');
-const messages    = document.getElementById('messages');
+const messagesEl  = document.getElementById('messages');
 const clearBtn    = document.getElementById('clear-btn');
 const modelSelect = document.getElementById('model-select');
 const charCount   = document.getElementById('char-count');
 const wordCountEl = document.getElementById('word-count-input');
+const loginOverlay= document.getElementById('login-overlay');
+const loginEmail  = document.getElementById('login-email');
+const loginBtn    = document.getElementById('login-btn');
+const loginError  = document.getElementById('login-error');
+const mobileBtn   = document.getElementById('mobile-nexus-btn');
+const analysisPanel = document.getElementById('analysis-panel');
 
-// ── Init charts ─────────────────────────────────────────────
-function initCharts() {
-  const chartDefaults = {
-    animation: { duration: 800 },
-    plugins: { legend: { display: false } },
-  };
+// ════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════
+async function doLogin() {
+  const email = loginEmail.value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    loginError.textContent = '◈ Email invalide — vérifiez le format';
+    loginEmail.focus();
+    return;
+  }
+  loginBtn.disabled = true;
+  loginBtn.textContent = '◈ CONNEXION…';
+  loginError.textContent = '';
 
-  // Style radar chart
-  const ctxStyle = document.getElementById('style-chart').getContext('2d');
-  styleChart = new Chart(ctxStyle, {
-    type: 'radar',
-    data: {
-      labels: ['FORMEL', 'ASSERTIF', 'CRÉATIF', 'DENSE', 'COMPLEXE', 'CERTAIN'],
-      datasets: [{
-        data: [0, 0, 0, 0, 0, 0],
-        backgroundColor: 'rgba(0,229,255,.08)',
-        borderColor: 'rgba(0,229,255,.6)',
-        pointBackgroundColor: '#00e5ff',
-        pointRadius: 3,
-        borderWidth: 1.5,
-      }]
-    },
-    options: {
-      ...chartDefaults,
-      scales: {
-        r: {
-          min: 0, max: 100,
-          grid: { color: 'rgba(255,255,255,.06)' },
-          angleLines: { color: 'rgba(255,255,255,.06)' },
-          ticks: { display: false },
-          pointLabels: {
-            color: '#4a5a80',
-            font: { family: 'Share Tech Mono', size: 9 }
-          }
-        }
-      }
-    }
-  });
+  try {
+    const res  = await fetch('login.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
 
-  // Structure bar chart
-  const ctxStruct = document.getElementById('struct-chart').getContext('2d');
-  structChart = new Chart(ctxStruct, {
-    type: 'bar',
-    data: {
-      labels: ['COMPLEX.', 'RICHESSE', 'DENSITÉ', 'COG.LOAD', 'CERTITUDE'],
-      datasets: [{
-        data: [0, 0, 0, 0, 0],
-        backgroundColor: [
-          'rgba(0,229,255,.3)',
-          'rgba(124,58,237,.3)',
-          'rgba(245,158,11,.3)',
-          'rgba(239,68,68,.3)',
-          'rgba(16,185,129,.3)',
-        ],
-        borderColor: [
-          'rgba(0,229,255,.8)',
-          'rgba(124,58,237,.8)',
-          'rgba(245,158,11,.8)',
-          'rgba(239,68,68,.8)',
-          'rgba(16,185,129,.8)',
-        ],
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
-    },
-    options: {
-      ...chartDefaults,
-      indexAxis: 'y',
-      scales: {
-        x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#4a5a80', font: { size: 9, family: 'Share Tech Mono' } } },
-        y: { grid: { display: false }, ticks: { color: '#4a5a80', font: { size: 9, family: 'Share Tech Mono' } } }
-      }
-    }
-  });
+    // Succès
+    isLoggedIn = true;
+    loginOverlay.classList.add('hidden');
+    setText('user-email-display', data.email);
+    setText('user-since', 'depuis ' + (data.member_since||'').substring(0,10));
+    setText('sid-display', data.sid || '—');
+    const initial = data.email.charAt(0).toUpperCase();
+    setText('user-avatar', initial);
 
-  // BIG FIVE radar chart
-  const ctxBig5 = document.getElementById('big5-chart').getContext('2d');
-  big5Chart = new Chart(ctxBig5, {
-    type: 'radar',
-    data: {
-      labels: ['OUVERTURE', 'CONSCIENC.', 'EXTRAVERSION', 'AGRÉABILITÉ', 'NÉVROSISME'],
-      datasets: [{
-        data: [50, 50, 50, 50, 50],
-        backgroundColor: 'rgba(124,58,237,.08)',
-        borderColor: 'rgba(124,58,237,.7)',
-        pointBackgroundColor: '#7c3aed',
-        pointRadius: 3,
-        borderWidth: 1.5,
-      }]
-    },
-    options: {
-      ...chartDefaults,
-      scales: {
-        r: {
-          min: 0, max: 100,
-          grid: { color: 'rgba(255,255,255,.06)' },
-          angleLines: { color: 'rgba(255,255,255,.06)' },
-          ticks: { display: false },
-          pointLabels: {
-            color: '#4a5a80',
-            font: { family: 'Share Tech Mono', size: 8 }
-          }
-        }
-      }
-    }
-  });
+    if (msgInput) msgInput.focus();
+  } catch(err) {
+    loginError.textContent = '◈ ERREUR: ' + err.message;
+    loginBtn.disabled = false;
+    loginBtn.textContent = '⟶ INITIALISER SESSION';
+  }
 }
 
-// ── Send message ────────────────────────────────────────────
+loginBtn.addEventListener('click', doLogin);
+loginEmail.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    if (!isLoggedIn) return;
+    switchSection(item.dataset.section);
+  });
+});
+
+function switchSection(section) {
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.section === section));
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.toggle('active', p.id === 'section-' + section));
+  if (section === 'history')  loadHistory();
+  if (section === 'analysis') loadCognitiveAnalysis();
+  if (section === 'system')   loadSystem();
+}
+
+// ════════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════════
+function initCharts() {
+  const defs = { animation:{duration:900}, plugins:{legend:{display:false}} };
+
+  const ctxS = document.getElementById('style-chart');
+  if (ctxS) {
+    styleChart = new Chart(ctxS.getContext('2d'), {
+      type: 'radar',
+      data: {
+        labels: ['FORMEL','ASSERTIF','CRÉATIF','DENSE','COMPLEXE','CERTAIN'],
+        datasets: [{ data:[0,0,0,0,0,0], backgroundColor:'rgba(0,229,255,.07)', borderColor:'rgba(0,229,255,.55)', pointBackgroundColor:'#00e5ff', pointRadius:3, borderWidth:1.5 }]
+      },
+      options: { ...defs, scales: { r: { min:0,max:100, grid:{color:'rgba(255,255,255,.05)'}, angleLines:{color:'rgba(255,255,255,.05)'}, ticks:{display:false}, pointLabels:{color:'#4a5a80',font:{family:'Share Tech Mono',size:8}} } } }
+    });
+  }
+
+  const ctxT = document.getElementById('struct-chart');
+  if (ctxT) {
+    structChart = new Chart(ctxT.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['COMPL.','RICH.','DENS.','COG.','CERT.'],
+        datasets: [{ data:[0,0,0,0,0],
+          backgroundColor:['rgba(0,229,255,.28)','rgba(124,58,237,.28)','rgba(245,158,11,.28)','rgba(239,68,68,.28)','rgba(16,185,129,.28)'],
+          borderColor:['rgba(0,229,255,.7)','rgba(124,58,237,.7)','rgba(245,158,11,.7)','rgba(239,68,68,.7)','rgba(16,185,129,.7)'],
+          borderWidth:1, borderRadius:2 }]
+      },
+      options: { ...defs, indexAxis:'y', scales: {
+        x:{min:0,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5a80',font:{size:8,family:'Share Tech Mono'}}},
+        y:{grid:{display:false},ticks:{color:'#4a5a80',font:{size:8,family:'Share Tech Mono'}}} } }
+    });
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// SEND MESSAGE (2 phases)
+// ════════════════════════════════════════════════════════
 async function sendMessage() {
-  if (isProcessing) return;
+  if (isProcessing || !isLoggedIn) return;
   const text = msgInput.value.trim();
   if (!text) return;
 
@@ -140,469 +141,426 @@ async function sendMessage() {
   msgInput.value = '';
   updateInputMeta();
 
-  // Add user bubble
   appendMessage('user', text);
   totalMsgs++;
 
-  // Show typing indicator
   const typingEl = appendTyping();
+  setAnalysisStatus('processing', '◈ PHASE 1 — GÉNÉRATION RÉPONSE…');
 
-  // Analysis status
-  setAnalysisStatus('processing', '◈ ANALYSE EN COURS — 3 MOTEURS PARALLÈLES…');
-
+  // ── PHASE 1 : reply ──────────────────────────────────────
+  let replyData;
   try {
     const res = await fetch('api.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, mode: currentMode, model: currentModel }),
-      credentials: 'same-origin' // Important pour les sessions sur Hostinger
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message:text, mode:currentMode, model:currentModel, phase:'reply' })
     });
-
-    // Vérifier si la réponse est OK avant de parser le JSON
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('AETHER: Erreur HTTP', res.status, res.statusText, errorText);
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-
-    const contentType = res.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const rawText = await res.text();
-      console.error('AETHER: Réponse non-JSON reçue:', rawText.substring(0, 500));
-      throw new Error('Réponse serveur invalide (non-JSON)');
-    }
-
-    const data = await res.json();
+    if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+    replyData = await res.json();
+  } catch(err) {
     typingEl.remove();
+    appendMessage('assistant', '⚠ Erreur réseau phase 1: ' + err.message);
+    setAnalysisStatus('idle', '◈ ERREUR — ' + err.message);
+    isProcessing = false; sendBtn.disabled = false; msgInput.focus();
+    return;
+  }
 
-    if (data.error) {
-      appendMessage('assistant', `⚠ ERREUR: ${data.error}`);
-      setAnalysisStatus('idle', '◈ ERREUR — ' + (data.error || 'Vérifiez vos clés API'));
-      console.error('AETHER: Erreur API:', data);
-      isProcessing = false;
-      sendBtn.disabled = false;
-      msgInput.focus();
-      return;
-    }
+  typingEl.remove();
 
-    console.log('AETHER: Réponse reçue avec succès', data.meta);
-    appendMessage('assistant', data.reply, data.timestamp, data.meta);
-    totalMsgs++;
-    totalTokens += (data.meta?.tokens?.in || 0) + (data.meta?.tokens?.out || 0);
+  if (replyData.error === 'SESSION_EXPIRED') {
+    loginOverlay.classList.remove('hidden');
+    isProcessing = false; sendBtn.disabled = false;
+    return;
+  }
 
-    updateSidebar(data.meta, data.stats);
-    updateAnalysis(data.analysis, data.meta);
-    setAnalysisStatus('done', '◈ ANALYSE COMPLÈTE — ' + data.timestamp);
+  if (replyData.error) {
+    appendMessage('assistant', '⚠ ' + replyData.error);
+    setAnalysisStatus('idle', '◈ ERREUR API — ' + replyData.error);
+    isProcessing = false; sendBtn.disabled = false; msgInput.focus();
+    return;
+  }
 
-  } catch (err) {
-    typingEl.remove();
-    console.error('AETHER: Erreur réseau détaillée:', err);
-    
-    let errorMsg = '⚠ Erreur réseau. Vérifiez votre connexion.';
-    if (err.message.includes('HTTP')) {
-      errorMsg = `⚠ Erreur serveur: ${err.message}`;
-    } else if (err.message.includes('non-JSON')) {
-      errorMsg = '⚠ Réponse serveur invalide. Contactez l\'administrateur.';
-    }
-    
-    appendMessage('assistant', errorMsg);
-    setAnalysisStatus('idle', '◈ ERREUR RÉSEAU — ' + err.message);
-  } finally {
-    if (isProcessing) {
-      isProcessing = false;
-      sendBtn.disabled = false;
-      msgInput.focus();
-    }
+  appendMessage('assistant', replyData.reply, replyData.timestamp, replyData.meta);
+  totalMsgs++;
+  totalTokens += (replyData.meta?.tokens?.in||0) + (replyData.meta?.tokens?.out||0);
+  updateSidebar(replyData.meta, {});
+
+  // Débloque l'input immédiatement
+  isProcessing = false; sendBtn.disabled = false; msgInput.focus();
+
+  // ── PHASE 2 : analyze (non bloquant) ─────────────────────
+  setAnalysisStatus('processing', '◈ PHASE 2 — NEXUS ANALYSE…');
+
+  try {
+    const res2 = await fetch('api.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message:text, mode:currentMode, model:currentModel, phase:'analyze', msg_id:replyData.msg_id })
+    });
+    if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+    const ad = await res2.json();
+
+    updateAnalysis(ad.analysis, replyData.meta);
+    updateSidebar(replyData.meta, ad.stats);
+    setAnalysisStatus('done', '◈ NEXUS COMPLET — ' + ad.timestamp);
+    allAnalyses.push({ ts:ad.timestamp, text, analysis:ad.analysis });
+
+  } catch(err) {
+    setAnalysisStatus('idle', '◈ NEXUS ÉCHOUÉ — ' + err.message);
   }
 }
 
-// ── Append message ───────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// MESSAGES DOM
+// ════════════════════════════════════════════════════════
 function appendMessage(role, text, timestamp, meta) {
-  const wrap = document.createElement('div');
-  wrap.className = `msg-wrap ${role}`;
-
+  const wrap   = document.createElement('div');
+  wrap.className = 'msg-wrap ' + role;
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
   bubble.textContent = text;
-
-  const metaEl = document.createElement('div');
-  metaEl.className = 'msg-meta';
-  if (role === 'user') {
-    metaEl.textContent = `VOUS • ${new Date().toLocaleTimeString('fr-FR')}`;
-  } else {
-    const model = meta?.model || '';
-    metaEl.textContent = `AETHER • ${timestamp || ''} • ${model}`;
-  }
-
-  wrap.appendChild(bubble);
-  wrap.appendChild(metaEl);
-  messages.appendChild(wrap);
-  messages.scrollTop = messages.scrollHeight;
+  const m = document.createElement('div');
+  m.className = 'msg-meta';
+  m.textContent = role === 'user'
+    ? 'VOUS • ' + new Date().toLocaleTimeString('fr-FR')
+    : 'AETHER • ' + (timestamp||'') + ' • ' + (meta?.model||'');
+  wrap.appendChild(bubble); wrap.appendChild(m);
+  messagesEl.appendChild(wrap);
+  // SCROLL to bottom — critique
+  requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
   return wrap;
 }
 
-// ── Typing indicator ─────────────────────────────────────────
 function appendTyping() {
   const wrap = document.createElement('div');
   wrap.className = 'msg-wrap assistant';
-  wrap.innerHTML = `
-    <div class="typing-indicator">
-      <div class="typing-dots">
-        <span></span><span></span><span></span>
-      </div>
-      AETHER TRAITE…
-    </div>`;
-  messages.appendChild(wrap);
-  messages.scrollTop = messages.scrollHeight;
+  wrap.innerHTML = `<div class="typing-indicator"><div class="typing-dots"><span></span><span></span><span></span></div>NEXUS TRAITE…</div>`;
+  messagesEl.appendChild(wrap);
+  requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
   return wrap;
 }
 
-// ── Update analysis panel ────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// UPDATE ANALYSIS (mapping complet 12 blocs)
+// ════════════════════════════════════════════════════════
 function updateAnalysis(analysis, meta) {
   if (!analysis) return;
-  const a = analysis.a || {};
-  const b = analysis.b || {};
-  const psycho = a.psychological || {};
-  const marketing = a.marketing || {};
-  const socio = b.sociological || {};
-  const behavioral = b.behavioral || {};
-  const linguistic = b.linguistic_fingerprint || {};
+  const a     = analysis.a || {};
+  const b     = analysis.b || {};
+  const psych = a.psychological || {};
+  const mkt   = a.marketing     || {};
+  const socio = b.sociological  || {};
+  const beh   = b.behavioral    || {};
+  const ling  = b.linguistic_fingerprint || {};
 
-  // Sentiment
-  const score = parseInt(a.sentiment_score) || 50;
-  document.getElementById('sentiment-label').textContent  = (a.sentiment || '—').toUpperCase();
-  document.getElementById('sentiment-score').textContent  = score + '/100';
-  document.getElementById('sentiment-bar').style.width    = score + '%';
-  document.getElementById('emotion-primary').textContent  = a.emotion_primary   || '—';
-  document.getElementById('emotion-secondary').textContent = a.emotion_secondary || '—';
-  document.getElementById('tone-val').textContent         = a.tone || '—';
+  // ❶ Émotionnel
+  const score = parseInt(a.sentiment_score)||50;
+  setText('sentiment-label', (a.sentiment||'neutre').toUpperCase());
+  setText('sentiment-score', score+'/100');
+  setWidth('sentiment-bar',  score);
+  setText('emotion-primary',   a.emotion_primary||'—');
+  setText('emotion-secondary', a.emotion_secondary||'—');
+  setText('tone-val', a.tone||'—');
 
-  // Style bars
-  setBar('sb-formal',  'sb-formal-v',  a.style_formal);
-  setBar('sb-assert',  'sb-assert-v',  a.style_assertive);
-  setBar('sb-creative','sb-creative-v',a.style_creative);
+  // ❷ Style
+  setBar('sb-formal',   'sb-formal-v',   a.style_formal);
+  setBar('sb-assert',   'sb-assert-v',   a.style_assertive);
+  setBar('sb-creative', 'sb-creative-v', a.style_creative);
 
-  // Radar chart
+  // ❸ Psycho
+  setMeter('m-stress',       'mv-stress',     psych.stress_level);
+  setMeter('m-dissonance',   'mv-dissonance', psych.cognitive_dissonance);
+  setMeter('m-motivation-bar','mv-motivation', psych.big5_openness);
+  setText('pg-maslow', psych.maslow_level||'—');
+  setText('pg-attach',  psych.attachment_style||'—');
+  setText('pg-locus',   psych.locus_control||'—');
+  setText('pg-motiv',   psych.motivation_type||'—');
+  renderTags('defense-tags', psych.defense_mechanisms||[], 'tag-pattern');
+
+  // ❹ BIG FIVE barres verticales
+  setBig5('b5-open','bv-open', psych.big5_openness);
+  setBig5('b5-cons','bv-cons', psych.big5_conscientiousness);
+  setBig5('b5-extra','bv-extra',psych.big5_extraversion);
+  setBig5('b5-agree','bv-agree',psych.big5_agreeableness);
+  setBig5('b5-neuro','bv-neuro',psych.big5_neuroticism);
+
+  // ❺ Marketing
+  setText('mkt-persona', mkt.buyer_persona||'INDÉTERMINÉ');
+  setMeter('m-engage',    'mv-engage',    mkt.engagement_score);
+  setMeter('m-urgency',   'mv-urgency',   mkt.urgency_level);
+  setMeter('m-objection', 'mv-objection', mkt.objection_likelihood);
+  setMeter('m-persuasion','mv-persuasion',mkt.persuasion_susceptibility);
+  setText('mkt-decision', mkt.decision_style||'—');
+  setText('mkt-price',    mkt.price_sensitivity||'—');
+  renderTags('pain-tags',   mkt.pain_points||[], 'tag-keyword');
+  renderTags('desire-tags', mkt.desires||[], 'tag-theme');
+
+  // ❻ Radar
   if (styleChart) {
     styleChart.data.datasets[0].data = [
-      a.style_formal    || 0,
-      a.style_assertive || 0,
-      a.style_creative  || 0,
-      b.information_density || 0,
-      b.complexity      || 0,
-      b.certainty_level || 0,
+      a.style_formal||0, a.style_assertive||0, a.style_creative||0,
+      b.information_density||0, b.complexity||0, b.certainty_level||0
     ];
     styleChart.update();
   }
 
-  // Structure
-  setStructVal('st-complexity', b.complexity);
-  setStructVal('st-richness',   b.vocabulary_richness);
-  setStructVal('st-density',    b.information_density);
-  setStructVal('st-cogload',    b.cognitive_load);
-  setStructVal('st-certainty',  b.certainty_level);
-  const hedging = linguistic.hedging_frequency ? Math.round(linguistic.hedging_frequency * 100) : '—';
-  document.getElementById('st-hedging').textContent = hedging;
-  const avgLen = b.avg_sentence_len || 0;
-  document.getElementById('st-avglen').textContent = avgLen ? avgLen.toFixed(1) : '—';
+  // ❼ Sociologique
+  setText('sg-edu',   socio.estimated_education||'—');
+  setText('sg-gen',   socio.generational_marker||'—');
+  setText('sg-class', socio.social_class_signals||'—');
+  setText('sg-polit', socio.political_signals||'—');
+  setText('sg-socio', socio.sociolect||'—');
+  setMeter('m-indiv',  'mv-indiv',  socio.individualism_score);
+  setMeter('m-conform','mv-conform',socio.conformity_score);
+  renderTags('cult-tags', socio.cultural_references||[], 'tag-theme');
 
-  // Bar chart
+  // ❽ Structure + chart
+  setText('st-complexity', b.complexity||'—');
+  setText('st-richness',   b.vocabulary_richness||'—');
+  setText('st-density',    b.information_density||'—');
+  setText('st-cogload',    b.cognitive_load||'—');
+  setText('st-certainty',  b.certainty_level||'—');
+  setText('st-hedging',    ling.hedging_frequency||'—');
   if (structChart) {
-    structChart.data.datasets[0].data = [
-      b.complexity          || 0,
-      b.vocabulary_richness || 0,
-      b.information_density || 0,
-      b.cognitive_load      || 0,
-      b.certainty_level     || 0,
-    ];
+    structChart.data.datasets[0].data = [b.complexity||0,b.vocabulary_richness||0,b.information_density||0,b.cognitive_load||0,b.certainty_level||0];
     structChart.update();
   }
 
-  // Intent & themes
-  document.getElementById('intent-val').textContent = b.intent || '—';
-  renderTags('themes-tags',   b.themes   || [], 'tag-theme');
-  renderTags('keywords-tags', b.keywords || [], 'tag-keyword');
-  renderTags('patterns-tags', b.language_patterns   || [], 'tag-pattern');
-  renderTags('devices-tags',  b.rhetorical_devices  || [], 'tag-device');
+  // ❾ Comportemental
+  setMeter('m-decision','mv-decision',beh.decision_readiness);
+  setMeter('m-risk',    'mv-risk',    beh.risk_tolerance);
+  setMeter('m-info',    'mv-info',    beh.information_seeking);
+  setMeter('m-auth',    'mv-auth',    beh.authority_deference);
+  setMeter('m-consist', 'mv-consist', beh.consistency_bias);
+  renderTags('bias-tags', beh.cognitive_biases||[], 'tag-keyword');
 
-  // BIG FIVE chart (create if not exists)
-  updateBig5Chart(psycho);
+  // ❿ Intention
+  setText('intent-badge', (b.intent||'indéterminé').toUpperCase());
+  renderTags('themes-tags',   b.themes||[], 'tag-theme');
+  renderTags('keywords-tags', b.keywords||[], 'tag-keyword');
 
-  // Psychological profile (❸)
-  document.getElementById('mv-stress').textContent = (psycho.stress_level ?? '—') + (typeof psycho.stress_level === 'number' ? '/100' : '');
-  document.getElementById('m-stress').style.width = (psycho.stress_level ?? 0) + '%';
-  document.getElementById('mv-dissonance').textContent = (psycho.cognitive_dissonance ?? '—') + (typeof psycho.cognitive_dissonance === 'number' ? '/100' : '');
-  document.getElementById('m-dissonance').style.width = (psycho.cognitive_dissonance ?? 0) + '%';
-  document.getElementById('mv-motivation').textContent = psycho.motivation_type || '—';
-  document.getElementById('m-motivation-bar').style.width = '60%';
-  document.getElementById('pg-maslow').textContent = psycho.maslow_level || '—';
-  document.getElementById('pg-attach').textContent = psycho.attachment_style || '—';
-  document.getElementById('pg-locus').textContent = psycho.locus_control || '—';
-  document.getElementById('pg-motiv').textContent = psycho.motivation_type || '—';
-  renderTags('defense-tags', psycho.defense_mechanisms || [], 'tag-defense');
+  // ⓫ Linguistique
+  setText('lg-struct',  ling.sentence_structure||'—');
+  setText('lg-voice',   ling.voice||'—');
+  setText('lg-punct',   ling.punctuation_style||'—');
+  setText('lg-lexdiv',  ling.lexical_diversity||'—');
+  renderTags('patterns-tags', b.language_patterns||[], 'tag-pattern');
+  renderTags('devices-tags',  b.rhetorical_devices||[], 'tag-device');
+  renderTags('anomaly-tags',  b.anomaly_signals||[], 'tag-keyword');
 
-  // Marketing profile (❹)
-  document.getElementById('mkt-persona').textContent = marketing.buyer_persona || '—';
-  document.getElementById('mv-engage').textContent = (marketing.engagement_score ?? '—') + (typeof marketing.engagement_score === 'number' ? '/100' : '');
-  document.getElementById('m-engage').style.width = (marketing.engagement_score ?? 0) + '%';
-  document.getElementById('mv-urgency').textContent = (marketing.urgency_level ?? '—') + (typeof marketing.urgency_level === 'number' ? '/100' : '');
-  document.getElementById('m-urgency').style.width = (marketing.urgency_level ?? 0) + '%';
-  document.getElementById('mv-objection').textContent = (marketing.objection_likelihood ?? '—') + (typeof marketing.objection_likelihood === 'number' ? '/100' : '');
-  document.getElementById('m-objection').style.width = (marketing.objection_likelihood ?? 0) + '%';
-  document.getElementById('mv-persuasion').textContent = (marketing.persuasion_susceptibility ?? '—') + (typeof marketing.persuasion_susceptibility === 'number' ? '/100' : '');
-  document.getElementById('m-persuasion').style.width = (marketing.persuasion_susceptibility ?? 0) + '%';
-  document.getElementById('mkt-decision').textContent = marketing.decision_style || '—';
-  document.getElementById('mkt-price').textContent = marketing.price_sensitivity || '—';
-  renderTags('pain-tags', marketing.pain_points || [], 'tag-pain');
-  renderTags('desire-tags', marketing.desires || [], 'tag-desire');
-
-  // Sociological profile (❻)
-  document.getElementById('sg-edu').textContent = socio.estimated_education || '—';
-  document.getElementById('sg-gen').textContent = socio.generational_marker || '—';
-  document.getElementById('sg-class').textContent = socio.social_class_signals || '—';
-  document.getElementById('sg-polit').textContent = socio.political_signals || '—';
-  document.getElementById('sg-socio').textContent = socio.sociolect || '—';
-  document.getElementById('mv-indiv').textContent = (socio.individualism_score ?? '—') + (typeof socio.individualism_score === 'number' ? '/100' : '');
-  document.getElementById('m-indiv').style.width = (socio.individualism_score ?? 0) + '%';
-  document.getElementById('mv-conform').textContent = (socio.conformity_score ?? '—') + (typeof socio.conformity_score === 'number' ? '/100' : '');
-  document.getElementById('m-conform').style.width = (socio.conformity_score ?? 0) + '%';
-  renderTags('cult-tags', socio.cultural_references || [], 'tag-cult');
-  renderTags('comm-tags', socio.community_signals || [], 'tag-comm');
-
-  // Behavioral signals (❽)
-  document.getElementById('mv-decision').textContent = (behavioral.decision_readiness ?? '—') + (typeof behavioral.decision_readiness === 'number' ? '/100' : '');
-  document.getElementById('m-decision').style.width = (behavioral.decision_readiness ?? 0) + '%';
-  document.getElementById('mv-risk').textContent = (behavioral.risk_tolerance ?? '—') + (typeof behavioral.risk_tolerance === 'number' ? '/100' : '');
-  document.getElementById('m-risk').style.width = (behavioral.risk_tolerance ?? 0) + '%';
-  document.getElementById('mv-info').textContent = (behavioral.information_seeking ?? '—') + (typeof behavioral.information_seeking === 'number' ? '/100' : '');
-  document.getElementById('m-info').style.width = (behavioral.information_seeking ?? 0) + '%';
-  document.getElementById('mv-auth').textContent = (behavioral.authority_deference ?? '—') + (typeof behavioral.authority_deference === 'number' ? '/100' : '');
-  document.getElementById('m-auth').style.width = (behavioral.authority_deference ?? 0) + '%';
-  document.getElementById('mv-consist').textContent = (behavioral.consistency_bias ?? '—') + (typeof behavioral.consistency_bias === 'number' ? '/100' : '');
-  document.getElementById('m-consist').style.width = (behavioral.consistency_bias ?? 0) + '%';
-  renderTags('bias-tags', behavioral.cognitive_biases || [], 'tag-bias');
-  renderTags('commneeds-tags', behavioral.communication_needs || [], 'tag-commneeds');
-
-  // Linguistic fingerprint (❿)
-  document.getElementById('lg-struct').textContent = linguistic.sentence_structure || '—';
-  document.getElementById('lg-voice').textContent = linguistic.voice || '—';
-  document.getElementById('lg-punct').textContent = linguistic.punctuation_style || '—';
-  document.getElementById('lg-lexdiv').textContent = (linguistic.lexical_diversity ?? '—') + (typeof linguistic.lexical_diversity === 'number' ? '/100' : '');
-
-  // Meta
+  // ⓬ Meta
   if (meta) {
-    document.getElementById('meta-model').textContent   = meta.model   || '—';
-    document.getElementById('meta-latency').textContent = meta.latency ? meta.latency + ' ms' : '—';
-    document.getElementById('meta-tin').textContent     = meta.tokens?.in  || '—';
-    document.getElementById('meta-tout').textContent    = meta.tokens?.out || '—';
-    document.getElementById('meta-session').textContent = meta.session   || '—';
-    document.getElementById('meta-time').textContent    = new Date().toLocaleTimeString('fr-FR');
+    setText('meta-model',   meta.model||'—');
+    setText('meta-latency', meta.latency ? meta.latency+' ms' : '—');
+    setText('meta-tin',     meta.tokens?.in||'—');
+    setText('meta-tout',    meta.tokens?.out||'—');
+    setText('meta-session', meta.session||'—');
+    setText('meta-time',    new Date().toLocaleTimeString('fr-FR'));
   }
 
   // Flash blocks
   document.querySelectorAll('.analysis-block').forEach(el => {
-    el.classList.remove('updated');
-    void el.offsetWidth;
-    el.classList.add('updated');
+    el.classList.remove('updated'); void el.offsetWidth; el.classList.add('updated');
   });
 }
 
-// ── Helpers ──────────────────────────────────────────────────
-function updateBig5Chart(psycho) {
-  if (!big5Chart) return;
-  big5Chart.data.datasets[0].data = [
-    psycho.big5_openness ?? 50,
-    psycho.big5_conscientiousness ?? 50,
-    psycho.big5_extraversion ?? 50,
-    psycho.big5_agreeableness ?? 50,
-    psycho.big5_neuroticism ?? 50,
-  ];
-  big5Chart.update();
+// ════════════════════════════════════════════════════════
+// DOM HELPERS
+// ════════════════════════════════════════════════════════
+function setText(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+function setWidth(id, pct) { const e=document.getElementById(id); if(e) e.style.width=(parseInt(pct)||0)+'%'; }
+function setBar(fId, vId, val) { const v=parseInt(val)||0; setWidth(fId,v); setText(vId,v); }
+function setMeter(fId, vId, val) { const v=parseInt(val)||0; setWidth(fId,v); if(vId) setText(vId,v); }
+function setBig5(fillId, valId, val) {
+  const v = parseInt(val)||0;
+  const el = document.getElementById(fillId);
+  if (el) el.style.height = v + '%';
+  setText(valId, v);
 }
 
-function setBar(fillId, valId, value) {
-  const v = parseInt(value) || 0;
-  document.getElementById(fillId).style.width = v + '%';
-  document.getElementById(valId).textContent  = v;
-}
-
-function setStructVal(id, value) {
-  document.getElementById(id).textContent = parseInt(value) || '—';
-}
-
-function renderTags(containerId, items, cls) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  if (!Array.isArray(items) || items.length === 0) {
-    container.innerHTML = '<span style="font-size:.65rem;color:#2a3550;font-family:\'Share Tech Mono\',monospace">—</span>';
+function renderTags(cId, items, cls) {
+  const c = document.getElementById(cId);
+  if (!c) return;
+  c.innerHTML = '';
+  if (!Array.isArray(items)||!items.length) {
+    c.innerHTML = '<span style="font-size:.58rem;color:#2a3550;font-family:\'Share Tech Mono\',monospace">—</span>';
     return;
   }
-  items.slice(0, 8).forEach((item, i) => {
-    const tag = document.createElement('span');
-    tag.className = `tag ${cls}`;
-    tag.textContent = item;
-    tag.style.animationDelay = (i * 50) + 'ms';
-    container.appendChild(tag);
+  items.slice(0,7).forEach((item,i) => {
+    const t = document.createElement('span');
+    t.className = 'tag '+cls;
+    t.textContent = item;
+    t.style.animationDelay = (i*40)+'ms';
+    c.appendChild(t);
   });
 }
 
 function setAnalysisStatus(state, text) {
-  const el = document.getElementById('analysis-status');
-  el.innerHTML = `<span class="status-${state}">${text}</span>`;
+  const e = document.getElementById('analysis-status');
+  if (e) e.innerHTML = `<span class="status-${state}">${text}</span>`;
 }
 
 function updateSidebar(meta, stats) {
-  document.getElementById('total-tokens').textContent = totalTokens;
-  document.getElementById('total-msgs').textContent   = totalMsgs;
-  document.getElementById('last-latency').textContent = meta?.latency ? meta.latency + ' ms' : '—';
+  setText('total-tokens', totalTokens);
+  setText('total-msgs',   totalMsgs);
+  setText('last-latency', meta?.latency ? meta.latency+' ms' : '—');
+  if (stats?.avg_sent) setText('avg-sentiment', Math.round(stats.avg_sent));
 }
 
 function updateInputMeta() {
-  const text = msgInput.value;
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  charCount.textContent    = text.length + ' caractères';
-  wordCountEl.textContent  = words + ' mots';
+  const t = msgInput?.value||'';
+  const w = t.trim() ? t.trim().split(/\s+/).length : 0;
+  if(charCount)   charCount.textContent   = t.length+' car.';
+  if(wordCountEl) wordCountEl.textContent = w+' mots';
 }
 
-// ── Mode buttons ─────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// PAGES
+// ════════════════════════════════════════════════════════
+function showLoading(cId, icon, label) {
+  const c = document.getElementById(cId);
+  if (!c) return;
+  c.innerHTML = `<div class="section-loading">
+    <div class="loading-icon">${icon}</div>
+    <div class="loading-text">${label}<br><span class="loading-dots"><span></span><span></span><span></span></span></div>
+  </div>`;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function loadHistory() {
+  showLoading('history-content', '◎', 'CHARGEMENT HISTORIQUE');
+  try {
+    const data = await (await fetch('history.php')).json();
+    const c = document.getElementById('history-content');
+    if (!data.messages?.length) {
+      c.innerHTML = '<div class="section-idle"><div class="section-idle-icon">◎</div><div class="section-idle-title">HISTORIQUE VIDE</div><div class="section-idle-sub">Aucun message dans cette session.</div></div>';
+      return;
+    }
+    c.innerHTML = data.messages.map(m => `
+      <div class="history-row ${m.role}">
+        <div class="history-role">${m.role==='user'?'VOUS':'AETHER'}</div>
+        <div class="history-content">${escHtml(m.content)}</div>
+        <div class="history-meta">${m.created_at||''} • ${m.model_used||''} • ${((m.tokens_in||0)+(m.tokens_out||0))} tok</div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('history-content').innerHTML = `<div class="error-msg">ERREUR: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function loadCognitiveAnalysis() {
+  showLoading('cognitive-content', '◉', 'CHARGEMENT PROFILS BIG BROTHER');
+  try {
+    const data = await (await fetch('stats.php')).json();
+    const c = document.getElementById('cognitive-content');
+    if (!data.profiles?.length) {
+      c.innerHTML = '<div class="section-idle"><div class="section-idle-icon">◉</div><div class="section-idle-title">AUCUN PROFIL</div><div class="section-idle-sub">Démarrez des conversations pour générer des profils.</div></div>';
+      return;
+    }
+    c.innerHTML = `
+      <div class="bb-header">◈ BIG BROTHER — ${data.profiles.length} SESSION(S) ANALYSÉE(S)</div>
+      <div class="profiles-grid">
+      ${data.profiles.map((p,i) => `
+        <div class="profile-card">
+          <div class="profile-header">
+            <span class="profile-sid">SESSION #${i+1} — ${escHtml((p.session_id||'').substring(0,10))}</span>
+            <span class="profile-count">${p.msg_count} msgs • ${p.total_tokens||0} tok</span>
+          </div>
+          <div class="profile-meters">
+            <div class="pm-item"><span>SENTIMENT</span><div class="meter-track sm"><div class="meter-fill green" style="width:${Math.round(p.avg_sent||50)}%"></div></div><span>${Math.round(p.avg_sent||50)}</span></div>
+            <div class="pm-item"><span>COMPLEXITÉ</span><div class="meter-track sm"><div class="meter-fill accent" style="width:${Math.round(p.avg_cpx||50)}%"></div></div><span>${Math.round(p.avg_cpx||50)}</span></div>
+            <div class="pm-item"><span>COG.LOAD</span><div class="meter-track sm"><div class="meter-fill warn" style="width:${Math.round(p.avg_cog||50)}%"></div></div><span>${Math.round(p.avg_cog||50)}</span></div>
+          </div>
+          <div class="profile-tags">
+            ${(p.top_themes||[]).map(t=>`<span class="tag tag-theme">${escHtml(t)}</span>`).join('')}
+            ${(p.top_emotions||[]).map(e=>`<span class="tag tag-keyword">${escHtml(e)}</span>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>`;
+  } catch(e) {
+    document.getElementById('cognitive-content').innerHTML = `<div class="error-msg">ERREUR: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function loadSystem() {
+  showLoading('system-content', '⬟', 'DIAGNOSTICS EN COURS');
+  try {
+    const d = await (await fetch('system.php')).json();
+    document.getElementById('system-content').innerHTML = `
+      <div class="sys-grid">
+        <div class="sys-item"><span class="sys-label">PHP</span><span class="sys-val">${d.php||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">SERVEUR</span><span class="sys-val">${d.server||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">MEM LIMIT</span><span class="sys-val">${d.memory_limit||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">MAX EXEC</span><span class="sys-val">${d.max_exec||'—'}s</span></div>
+        <div class="sys-item"><span class="sys-label">DB SIZE</span><span class="sys-val">${d.db_size||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">SESSIONS</span><span class="sys-val">${d.total_sessions||0}</span></div>
+        <div class="sys-item"><span class="sys-label">MESSAGES</span><span class="sys-val">${d.total_messages||0}</span></div>
+        <div class="sys-item"><span class="sys-label">ANALYSES</span><span class="sys-val">${d.total_analyses||0}</span></div>
+        <div class="sys-item"><span class="sys-label">CLÉS VALIDES</span><span class="sys-val">${d.keys_count||0}/3</span></div>
+        <div class="sys-item"><span class="sys-label">MOD. CHAT</span><span class="sys-val">${d.model_chat||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">MOD. ANALYSE</span><span class="sys-val">${d.model_analysis||'—'}</span></div>
+        <div class="sys-item"><span class="sys-label">DATE</span><span class="sys-val">${d.uptime||'—'}</span></div>
+      </div>
+      <div class="sys-keys-status">
+        ${(d.key_status||[]).map(k=>`<div class="key-row-sys"><span class="dot ${k.ok?'dot-green':'dot-red'}"></span>${escHtml(k.role)} — ${k.ok?'OPÉRATIONNELLE':'INVALIDE'}</div>`).join('')}
+      </div>`;
+  } catch(e) {
+    document.getElementById('system-content').innerHTML = `<div class="error-msg">ERREUR: ${escHtml(e.message)}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// CONTRÔLES
+// ════════════════════════════════════════════════════════
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
-    document.getElementById('chat-mode-label').textContent = 'MODE: ' + currentMode.toUpperCase();
+    setText('chat-mode-label', currentMode.toUpperCase());
   });
 });
 
-// ── Model select ─────────────────────────────────────────────
-modelSelect.addEventListener('change', () => {
-  currentModel = modelSelect.value;
-  const label = modelSelect.options[modelSelect.selectedIndex].text.split('·')[0].trim();
-  document.getElementById('chat-model-label').textContent = label;
-});
-
-// ── Input listeners ──────────────────────────────────────────
-msgInput.addEventListener('input', updateInputMeta);
-
-msgInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-sendBtn.addEventListener('click', sendMessage);
-
-// ── Clear session ─────────────────────────────────────────────
-clearBtn.addEventListener('click', async () => {
-  if (!confirm('Effacer la session courante ?')) return;
-  try {
-    await fetch('clear.php', { method: 'POST' });
-  } catch(e) {}
-  messages.innerHTML = `
-    <div class="welcome-msg">
-      <div class="welcome-icon">⬡</div>
-      <div class="welcome-text">
-        <strong>SESSION RÉINITIALISÉE</strong><br>
-        <span>Nouvelle session démarrée. Historique effacé.</span>
-      </div>
-    </div>`;
-  totalTokens = 0;
-  totalMsgs   = 0;
-  updateSidebar({}, {});
-  setAnalysisStatus('idle', '◈ EN ATTENTE D\'UN MESSAGE');
-});
-
-// ── Navigation entre les sections ─────────────────────────────
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', (e) => {
-    e.preventDefault();
-    const section = item.dataset.section;
-    
-    // Update active nav
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    item.classList.add('active');
-    
-    // Hide all panels
-    document.querySelectorAll('.chat-panel, .analysis-panel, .history-panel, .system-panel, .cognitive-panel').forEach(p => {
-      p.style.display = 'none';
-    });
-    
-    // Show selected panel
-    if (section === 'chat') {
-      document.querySelector('.chat-panel').style.display = 'block';
-      document.getElementById('analysis-panel').style.display = 'block';
-    } else if (section === 'analysis') {
-      document.querySelector('.cognitive-panel').style.display = 'block';
-    } else if (section === 'history') {
-      loadHistory();
-      document.querySelector('.history-panel').style.display = 'block';
-    } else if (section === 'system') {
-      loadSystemInfo();
-      document.querySelector('.system-panel').style.display = 'block';
-    }
+if (modelSelect) {
+  modelSelect.addEventListener('change', () => {
+    currentModel = modelSelect.value;
+    setText('chat-model-label', modelSelect.options[modelSelect.selectedIndex].text.split('·')[0].trim());
   });
-});
-
-// ── Load History ──────────────────────────────────────────────
-async function loadHistory() {
-  try {
-    const res = await fetch('history.php');
-    const data = await res.json();
-    const container = document.querySelector('.history-panel .panel-content');
-    if (data.messages && data.messages.length > 0) {
-      container.innerHTML = data.messages.map(m => `
-        <div class="history-item">
-          <div class="history-meta">
-            <span class="history-role ${m.role}">${m.role === 'user' ? 'VOUS' : 'AETHER'}</span>
-            <span class="history-time">${m.created_at}</span>
-            <span class="history-tokens">${(m.tokens_in + m.tokens_out) || 0} tokens</span>
-          </div>
-          <div class="history-content">${escapeHtml(m.content)}</div>
-        </div>
-      `).join('');
-    } else {
-      container.innerHTML = '<div class="empty-state">Aucun message dans l\'historique</div>';
-    }
-  } catch (err) {
-    document.querySelector('.history-panel .panel-content').innerHTML = '<div class="error-state">Erreur de chargement</div>';
-  }
 }
 
-// ── Load System Info ──────────────────────────────────────────
-async function loadSystemInfo() {
-  try {
-    const res = await fetch('system.php');
-    const data = await res.json();
-    const container = document.querySelector('.system-panel .panel-content');
-    container.innerHTML = `
-      <div class="system-grid">
-        <div class="sys-item"><span class="sys-label">VERSION PHP</span><span class="sys-val">${data.php_version || '—'}</span></div>
-        <div class="sys-item"><span class="sys-label">TAILLE DB</span><span class="sys-val">${data.db_size || '—'}</span></div>
-        <div class="sys-item"><span class="sys-label">MESSAGES TOTAL</span><span class="sys-val">${data.total_messages || '—'}</span></div>
-        <div class="sys-item"><span class="sys-label">ANALYSES TOTAL</span><span class="sys-val">${data.total_analyses || '—'}</span></div>
-        <div class="sys-item"><span class="sys-label">CLÉ API 1</span><span class="sys-val status-${data.key1_valid ? 'ok' : 'err'}">${data.key1_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
-        <div class="sys-item"><span class="sys-label">CLÉ API 2</span><span class="sys-val status-${data.key2_valid ? 'ok' : 'err'}">${data.key2_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
-        <div class="sys-item"><span class="sys-label">CLÉ API 3</span><span class="sys-val status-${data.key3_valid ? 'ok' : 'err'}">${data.key3_valid ? 'VALIDE' : 'INVALIDE'}</span></div>
-      </div>
-    `;
-  } catch (err) {
-    document.querySelector('.system-panel .panel-content').innerHTML = '<div class="error-state">Erreur de chargement des infos système</div>';
-  }
+if (msgInput) {
+  msgInput.addEventListener('input', updateInputMeta);
+  msgInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+}
+if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+if (clearBtn) {
+  clearBtn.addEventListener('click', async () => {
+    if (!confirm('Effacer la session ?')) return;
+    try { await fetch('clear.php',{method:'POST'}); } catch(e){}
+    messagesEl.innerHTML = `<div class="welcome-msg"><div class="welcome-icon">⬡</div><div class="welcome-text"><strong>SESSION RÉINITIALISÉE</strong><br><span>Nouvelle session démarrée.</span></div></div>`;
+    totalTokens=0; totalMsgs=0; allAnalyses=[];
+    updateSidebar({},{}); setAnalysisStatus('idle','◈ EN ATTENTE');
+  });
 }
 
-// ── Escape HTML ───────────────────────────────────────────────
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+// Mobile NEXUS toggle
+if (mobileBtn) {
+  mobileBtn.addEventListener('click', () => {
+    const open = analysisPanel.classList.toggle('mobile-open');
+    mobileBtn.classList.toggle('active', open);
+    mobileBtn.textContent = open ? '✕' : '◉';
+  });
 }
 
-// ── Init ──────────────────────────────────────────────────────
+// Horloge
+setInterval(() => setText('chat-time', new Date().toLocaleTimeString('fr-FR')), 1000);
+setText('chat-time', new Date().toLocaleTimeString('fr-FR'));
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
 initCharts();
-
-// Session ID display (short)
-const sid = document.cookie.match(/PHPSESSID=([^;]+)/);
-if (sid) document.getElementById('sid-display').textContent = 'SID:' + sid[1].substring(0, 8);
-
-msgInput.focus();
+loginEmail.focus();
